@@ -23,7 +23,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 build = ["Pluto", "Pkg"]
-test = ["Pluto", "Test"]
+test = ["Pluto", "Pkg", "Test"]
 
 [compat]
 Pkg = "1.11.0"
