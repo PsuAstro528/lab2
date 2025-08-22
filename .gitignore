@@ -8,3 +8,4 @@ Manifest.toml
 
 .ipynb_checkpoints
 ex*backup*.jl
+core*
