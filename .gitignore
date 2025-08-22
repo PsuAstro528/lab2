@@ -1,0 +1,10 @@
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+data
+deps/deps.jl
+deps/build.log
+Manifest.toml
+
+.ipynb_checkpoints
+ex*backup*.jl
