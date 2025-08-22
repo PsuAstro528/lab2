@@ -242,7 +242,7 @@ The '.github/workflows/test.yaml' file provided in this repository already provi
 (If this doesn't work the first time, then it's probably wise to move on to the next exercise and come back to this only if you have sufficient time."""
 
 # ╔═╡ a93f0326-78ca-407d-aec2-5de318c002ca
-tip(md"If a test does fail, then it may be useful to run the tests on Roar Collab or your local machine, so you get faster feedback on whether you're tests are performing as expected.  From your local repository's directory, you can run `julia --project=test test/test2.jl ` to run the tests.  Once you get those working, then commit the changes to your local repo, push to GitHub, and see if the new version of your code passes all its test.")
+tip(md"If a test does fail, then it may be useful to run the tests on Lynx or your local machine, so you get faster feedback on whether you're tests are performing as expected.  From your local repository's directory, you can run `julia --project=test test/test2.jl ` to run the tests.  Once you get those working, then commit the changes to your local repo, push to GitHub, and see if the new version of your code passes all its test.")
 
 # ╔═╡ b760fedd-41ea-4784-845f-ede0163c0d12
 md"## Setup & Helper Code"
