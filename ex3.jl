@@ -10,6 +10,7 @@ begin
 	begin 
 		using DifferentialEquations
 		using LinearAlgebra
+		using FixedSizeArrays
 		using Plots
 		using Printf
 		using LaTeXStrings
@@ -24,7 +25,7 @@ md"""
 """
 
 # ╔═╡ e7cdc134-e45b-4d3a-b614-7153a237659e
-ChooseDisplayMode()
+WidthOverDocs()
 
 # ╔═╡ 83e6e5a6-1347-46a5-aa06-61535cdc1120
 md"""
@@ -75,18 +76,18 @@ for a system of N massive particles.
 # Assumptions:
 - Gravitational constant = 1.  
 Therefore, if masses are in solar masses and distances are in AU, 
-then the time unit is such that one year = 2pi.
+then the time unit is such that one year = 2π.
 
 """
 function gravity_as_first_order_system(du, u, mass, t)
     @assert length(du) == length(u) == 6 * length(mass)
     N = length(mass)
     @assert 2 <= N      # require at least two massive bodies
-    for k in 1:(3*N) 
+    @inbounds for k in 1:(3*N) 
        du[k] = u[3N+k]  # derivative of position is simply velocity
     end
     du[3N+1:end] .= 0.0   # initialize accelerations to zero
-    for i in 0:(N-2)      # loop over each pairs of bodies
+    @inbounds for i in 0:(N-2)      # loop over each pairs of bodies
         for j in (i+1):(N-1)
             dx = u[3*i+1] - u[3*j+1]  # displacements
             dy = u[3*i+2] - u[3*j+2]
@@ -125,7 +126,10 @@ begin
 	r_init = init_separation .* [-m[2]/sum(m), 0, 0, m[1]/sum(m), 0, 0 ]
 	v_init = init_velocity   .* [0, -m[2]/sum(m), 0, 0, m[1]/sum(m), 0 ]
 	# DifferentialEquations.jl wants the initial conditions as a single vector
-	u_init = vcat(r_init, v_init);  # concatenate positions & velocities
+	u_init = vcat(r_init, v_init);   # concatenate positions & velocities
+	u_init = FixedSizeArray(u_init); # Fix array size to help compiler optimize
+	m = FixedSizeArray(m)
+	
 end
 
 # ╔═╡ c7721744-061e-49e1-9470-0fd13bb960e9
@@ -262,11 +266,11 @@ display_msg_if_fail(check_type_isa(:response_3d,response_3d,[AbstractString,Mark
 # ╔═╡ 27352445-00c7-4c3f-9f41-b6127bfb1de2
 begin
 	prob_d = ODEProblem(gravity_as_first_order_system,u_init,time_span_short,m)
-	sol_d = solve(prob_d,Heun(),dt=year/36)
+	sol_d = solve(prob_d,Heun())
 end;
 
 # ╔═╡ 2525e649-cf6b-45dd-9532-4fec2aba2a38
-scatter(sol_d,idxs=(10,11),markersize = 0, xlabel="x (AU)", ylabel="y (AU)", title="Trajectory (4 years, Δt=1/36yr, 2nd order)", legend = false)
+scatter(sol_d,idxs=(10,11),markersize = 0, xlabel="x (AU)", ylabel="y (AU)", title="Trajectory (4 years, 2nd order)", legend = false)
 
 # ╔═╡ ce8aab4e-dcfc-43b0-b129-9335cfd1e5f5
 md"""
@@ -289,11 +293,11 @@ Now, let's try using the same algorithm, but for a longer integration.  Instead 
 begin
 	time_span_long = (0.0,100*year) 
 	prob_e = ODEProblem(gravity_as_first_order_system,u_init,time_span_long,m)
-	sol_e = solve(prob_e,Heun(),dt=year/36,saveat=year)
+	sol_e = solve(prob_e,Heun(),saveat=year/4)
 end;
 
 # ╔═╡ 43f85b14-a159-4946-a27c-22da4d50c846
-scatter(sol_e,idxs=(10,11),markersize = 0, xlabel="x (AU)", ylabel="y (AU)", title="Trajectory  (1000 years, Δt=1/36yr, 2nd order)", legend = false)
+scatter(sol_e,idxs=(10,11),markersize = 0, xlabel="x (AU)", ylabel="y (AU)", title="Trajectory  (1000 years, 2nd order)", legend = false)
 
 # ╔═╡ 588f0dfc-ee79-4617-ac24-62cae9e682b7
 md"""
@@ -316,7 +320,7 @@ In order to provide a more quantiative assessment of the integration accuracey, 
 
 # ╔═╡ cbf61a08-2780-47d2-9200-37d84f79bc6c
 "Calculate the phase of the orbit of the pl_id'th planet relative to x-axis (internal)"
-function calc_angle(u::Vector; pl_id::Integer = 1  )
+function calc_angle(u::AbstractVector; pl_id::Integer = 1  )
     @assert length(u) >= 6  
     @assert 1 <= pl_id <= length(u)//6 
     dx = u[3*pl_id+1]-u[1]
@@ -354,7 +358,7 @@ end
 
 # ╔═╡ 494c1b1f-6f18-4928-a721-9956904ed260
 "Calculate the separation between first and second bodies"
-function calc_separation(u::Vector; pl_id::Integer = 1 )
+function calc_separation(u::AbstractVector; pl_id::Integer = 1 )
     @assert length(u) >= 6
 	@assert 1 <= pl_id <= length(u)//6 
     dx = u[3*pl_id+1]-u[1]
@@ -376,11 +380,11 @@ Inputs:
 Assumes:
 - Gravitational constants = 1
 """
-function calc_energy(u::Vector, m::Vector)
+function calc_energy(u::AbstractVector, m::AbstractVector)
     @assert length(u) == 6*length(m)
     @assert length(m) == 2  
     # Assumes 2 bodies each with 3 coordinates, so velocities begin at 7
-    kinetic = 0.5*m[1]*sum(u[7:9].^2) + m[2]*sum(u[10:12].^2) 
+    kinetic = 0.5*m[1]*sum(view(u,7:9).^2) + m[2]*sum(view(u,10:12).^2) 
     d = calc_separation(u)
     potential = -m[1]*m[2]/d
     kinetic + potential
@@ -399,7 +403,7 @@ Inputs:
 Assumes:
 - Gravitational constants = 1
 """
-function calc_angular_momentum(u::Vector, m::Vector)
+function calc_angular_momentum(u::AbstractVector, m::AbstractVector)
     @assert length(u) == 6*length(m)
     N = length(m)
     @assert length(m) == 2  
@@ -418,78 +422,10 @@ md"""
 The first few times we did an integration and made plots, we did it one step at a time.  Going forward, you're going to try integrating this system many times changing the algorithm and a few parameters.  In order to make that more efficient (both for the computer and for you), we'll package all those stepts into a function, `make_test_plots_v1`.
 """
 
-# ╔═╡ dc413bad-9d28-487f-855a-e68295abee75
-"""
-   `make_test_plots_v1(opts)`
-
-Integrate a two-body system and plot the change in energy, angular modmentum, 
-radial separation of the planet and deviation of its phase from linear growth.
-
-# Optional names arguements: (default value)
-- `alg`: algorithm to use (DP8(); see [manual](http://docs.juliadiffeq.org/stable/solvers/ode_solve.html#Full-List-of-Methods-1))
-- `duration`: duration to integrate in orbits (100)
-- `steps_per_orbit`: number of time steps per orbit for Euler algorithm (ignored by other integrators) (1000)
-- `save_every_n_orbits`: how often to store results for plotting (1)
-- `init_separation`: initial separation (1)
-- `mass`: masses of bodies ([1, 0.001])
-
-"""
-function make_test_plots_v1(; alg=DP8(), duration=100, steps_per_orbit=1000, 
-        maxiters=1_000_000, save_every_n_orbits=1, init_separation= 1, mass = [1.0, 0.001], plt_title = "")
-    @assert length(mass) == 2  # Phase and separation error only make sense for 1 planet
-    # Setup initial conditions
-    init_velocity = sqrt(sum(mass)/init_separation) # Uniform circular motion
-    year = 2pi*sqrt(init_separation^3/sum(mass))    # Kepler's third law
-    r_init = init_separation .* [-mass[2]/sum(mass), 0, 0, mass[1]/sum(mass), 0, 0 ]
-    v_init = init_velocity   .* [0, -mass[2]/sum(mass), 0, 0, mass[1]/sum(mass), 0 ]
-    # DifferentialEquations.jl wants the initial conditions as a single vector
-    u_init = vcat(r_init, v_init);  # concatenate positions & velocities
-    @assert length(u_init) == 6 * length(mass)
-    year = 2pi*sqrt(init_separation^3/sum(mass))    # Kepler's third law
-    time_span = (0.0,0.01*year) 
-    prob = ODEProblem(gravity_as_first_order_system,u_init,time_span,mass)
-    if alg==Euler() # Euler requires a specified time step dt
-        # First do a very short integration to make sure code is compiled before timing
-        sol = solve(prob,alg,dt=year/steps_per_orbit,saveat=year*save_every_n_orbits,maxiters=maxiters);
-        time_span = (0.0,duration*year) 
-        prob = ODEProblem(gravity_as_first_order_system,u_init,time_span,mass)
-        # Now do the requested integration and time how long it takes
-        @time sol = solve(prob,alg,dt=year/steps_per_orbit,saveat=year*save_every_n_orbits,maxiters=maxiters, force_dtmin=false);
-    else # Other algorithms heuristically pick a timestep
-        # First do a very short integration to make sure code is compiled before timing
-        sol = solve(prob,alg,saveat=year*save_every_n_orbits);
-        time_span = (0.0,duration*year) 
-        prob = ODEProblem(gravity_as_first_order_system,u_init,time_span,mass)
-        # Now do the requested integration and time how long it takes
-        @time sol = solve(prob,alg,saveat=year*save_every_n_orbits,maxiters=maxiters);
-    end
-    separation_init = calc_separation(u_init)
-    Lz_init = calc_angular_momentum(u_init,mass)
-    E_init = calc_energy(u_init,mass)
-    # Make plots
-    plot_angle    = scatter(sol.t,calc_phase_error(sol,year=year), xlabel = "Time", ylabel = "Phase error", markersize=0, legend = false, grid=:no, xticks=0:round(duration*year/2,sigdigits=1):duration*year)
-    plot_distance = scatter(sol.t,calc_separation.(sol.u).-separation_init, xlabel = "Time", ylabel = "Separation", markersize=0, legend = false, grid=:no, xticks=0:round(duration*year/2,sigdigits=1):duration*year)
-    plot_energy   = scatter(sol.t,map(x->calc_energy(x,mass).-E_init,sol.u), xlabel = "Time", ylabel = "Energy Error", markersize=0, legend = false, grid=:no, xticks=0:round(duration*year/2,sigdigits=1):duration*year)
-    plot_Lz       = scatter(sol.t,map(x->calc_angular_momentum(x,mass).-Lz_init,sol.u), xlabel = "Time", ylabel = "L_z Error", markersize=0, legend = false, grid=:no, xticks=0:round(duration*year/2,sigdigits=1):duration*year, yformatter=((x)->Printf.@sprintf "%0.1e" x))
-    if length(plt_title) >= 1 
-		plt = plot( plot_energy, plot_Lz, plot_distance, plot_angle, layout = (2,2), plot_title=plt_title )
-	else
-		plt = plot( plot_energy, plot_Lz, plot_distance, plot_angle, layout = (2,2) )
-	end
-	
-	plt
-end
-
 # ╔═╡ 4ab79682-ac15-4b51-a630-464bdf5f9108
 md"""
 Now, we can easily integrate systems and inspect the results using just one line of code for each algorithm that we test.  For example:
 """
-
-# ╔═╡ f14d96ef-d885-403a-8f2c-4023abb8db71
-make_test_plots_v1(alg=Euler(), duration=100, plt_title="Euler, 1st order")
-
-# ╔═╡ 590ad389-9037-4a23-ab35-5bea96e32b11
-make_test_plots_v1(alg=Heun(), steps_per_orbit=1000, duration=1000, plt_title="Heun, 2nd order")
 
 # ╔═╡ bb4b371f-c5f4-4d56-9ffb-71cafc3a2ef7
 md"""
@@ -507,21 +443,6 @@ md"""
 Try experimenting with alternative integration algorithms by replacing `alg=Heun()` in the cell above with [other integration algorithms](http://docs.juliadiffeq.org/stable/solvers/ode_solve.html#Full-List-of-Methods-1) such as `Midpoint()`, `RK4()`, `Tsit5()`, `DP8()`.  (For higher-order algorithms, you may want to reduce the number of steps per orbits.)
 """
 
-# ╔═╡ cbf0d4f7-a10c-4499-9bd5-052a21e3c984
-make_test_plots_v1(alg=Midpoint(), steps_per_orbit=1000, duration=1000, plt_title="Midpoint, 2nd order")
-
-# ╔═╡ c49f5f6d-1ceb-40a3-8032-a74b465936a7
-make_test_plots_v1(alg=RK4(), steps_per_orbit=10, duration=1000, plt_title="Runge-Kutta 4th order")
-
-# ╔═╡ b4d95d86-254c-4982-bd15-5ff263ff750d
-make_test_plots_v1(alg=Tsit5(), steps_per_orbit=1000, duration=1000,plt_title="Tsit5")
-
-# ╔═╡ 8f68ba9a-ab88-4472-b19b-9f30b3f562e6
-make_test_plots_v1(alg=DP8(), steps_per_orbit=36, duration=1000, plt_title="Dormand-Prince, ~8th order")
-
-# ╔═╡ efcc2856-fb3e-45c1-9f70-8e6f4cb979ec
-make_test_plots_v1(alg=Vern8(), steps_per_orbit=1000, duration=1000, plt_title="Verner's Runge-Kutta,  ~8th order")
-
 # ╔═╡ 74f1ea84-e247-4d25-a232-fb486589f604
 md"""
 h.  Did any of the integrators you tried perform acceptably?  If so, which?  
@@ -535,7 +456,7 @@ display_msg_if_fail(check_type_isa(:response_3h,response_3h,[AbstractString,Mark
 
 # ╔═╡ bbeb1677-2f15-46fd-9c0f-7d399b610f5b
 md"""
-## Choosing Appropriate Algorithms 
+## Choosing appropriate algorithms 
 Next, we will rewrite the problem in a slightly different way that allows the DifferentialEquations.jl package to make use of the nice mathematical properties of a Hamiltonian system.  There are special mathematical properties of the N-body problem.
 There are [specialized integration algorithms](https://docs.sciml.ai/DiffEqDocs/stable/solvers/dynamical_solve/) that can be applied when the derivative of the positions is proportional to the velocities and the derivative of the velocities does not depend on the velocities.  To make use of these algorithms, I've provided new functions that calculate the derivatives of the positions ("drift") separately from calculating the derivatives of the velocities ("kick").   
 """
@@ -559,7 +480,7 @@ Sets derivative of positions equal to velocities for a system of N massive parti
 function gravity_drift(du, v, u, mass, t)
     @assert length(du) == length(v) == length(u) == 3 * length(mass)
     N = length(mass)
-    for k in 1:(3*N) 
+    @inbounds for k in 1:(3*N) 
        du[k] = v[k]     # derivative of positions is simply velocity
     end
 end
@@ -590,22 +511,22 @@ function gravity_kick(dv, v, u, mass, t)
     N = length(mass)
     @assert 2 <= N      # require at least two massive bodies
     dv .= 0.0             # initialize accelerations to zero
-    for i in 0:(N-2)      # loop over each pairs of bodies
+    @inbounds for i in 0:(N-2)      # loop over each pairs of bodies
         for j in (i+1):(N-1)
             dx = u[3*i+1] - u[3*j+1]  # displacements
             dy = u[3*i+2] - u[3*j+2]
             dz = u[3*i+3] - u[3*j+3]
             # calculate distance once per pair
-            d = sqrt(dx^2+dy^2+dz^2)  
+            inv_d³ = 1/sqrt(dx^2+dy^2+dz^2)^3  
             # derivatives of velocities are accelerations 
             # acceleration on body i due to body j
-            dv[3*i+1] -= mass[j+1] * dx / d^3 
-            dv[3*i+2] -= mass[j+1] * dy / d^3 
-            dv[3*i+3] -= mass[j+1] * dz / d^3 
+            dv[3*i+1] -= mass[j+1] * dx * inv_d³ 
+            dv[3*i+2] -= mass[j+1] * dy * inv_d³
+            dv[3*i+3] -= mass[j+1] * dz * inv_d³
             # acceleration on body j due to body i
-            dv[3*j+1] += mass[i+1] * dx / d^3 
-            dv[3*j+2] += mass[i+1] * dy / d^3 
-            dv[3*j+3] += mass[i+1] * dz / d^3 
+            dv[3*j+1] += mass[i+1] * dx * inv_d³
+            dv[3*j+2] += mass[i+1] * dy * inv_d³
+            dv[3*j+3] += mass[i+1] * dz * inv_d³ 
         end
     end
     dv
@@ -647,7 +568,7 @@ end
 function calc_energy(u::AbstractVector, v::AbstractVector, m::AbstractVector)
     @assert length(u) == length(v) == 3*length(m)
     @assert length(m) == 2 
-    kinetic = 0.5*m[1]*sum(v[1:3].^2) + m[2]*sum(v[4:6].^2) 
+    kinetic = 0.5*m[1]*sum(view(v,1:3).^2) + m[2]*sum(view(v,4:6).^2) 
     d = calc_separation(u)
     potential = -m[1]*m[2]/d
     kinetic + potential
@@ -664,6 +585,90 @@ function calc_angular_momentum(u::AbstractVector, v::AbstractVector, m::Abstract
     L += m[2] * cross(view(u,4:6), view(v,4:6))
     L[3]
 end;
+
+# ╔═╡ dc413bad-9d28-487f-855a-e68295abee75
+"""
+   `make_test_plots_v1(opts)`
+
+Integrate a two-body system and plot the change in energy, angular modmentum, 
+radial separation of the planet and deviation of its phase from linear growth.
+
+# Optional names arguements: (default value)
+- `alg`: algorithm to use (DP8(); see [manual](http://docs.juliadiffeq.org/stable/solvers/ode_solve.html#Full-List-of-Methods-1))
+- `duration`: duration to integrate in orbits (100)
+- `steps_per_orbit`: number of time steps per orbit for Euler algorithm (ignored by other integrators) (1000)
+- `save_every_n_orbits`: how often to store results for plotting (1)
+- `init_separation`: initial separation (1)
+- `mass`: masses of bodies ([1, 0.001])
+
+"""
+function make_test_plots_v1(; alg=DP8(), duration=100, steps_per_orbit=1000, 
+        maxiters=1_000_000, save_every_n_orbits=1, init_separation= 1, mass = FixedSizeArray([1.0, 0.001]), plt_title = "")
+    @assert length(mass) == 2  # Phase and separation error only make sense for 1 planet
+    # Setup initial conditions
+    init_velocity = sqrt(sum(mass)/init_separation) # Uniform circular motion
+    year = 2pi*sqrt(init_separation^3/sum(mass))    # Kepler's third law
+    r_init = init_separation .* [-mass[2]/sum(mass), 0, 0, mass[1]/sum(mass), 0, 0 ]
+    v_init = init_velocity   .* [0, -mass[2]/sum(mass), 0, 0, mass[1]/sum(mass), 0 ]
+    # DifferentialEquations.jl wants the initial conditions as a single vector
+    u_init = vcat(r_init, v_init);  # concatenate positions & velocities
+	u_init = FixedSizeArray(u_init)
+    @assert length(u_init) == 6 * length(mass)
+    year = 2pi*sqrt(init_separation^3/sum(mass))    # Kepler's third law
+    time_span = (0.0,0.01*year) 
+    prob = ODEProblem(gravity_as_first_order_system,u_init,time_span,mass)
+    if alg==Euler() # Euler requires a specified time step dt
+        # First do a very short integration to make sure code is compiled before timing
+        sol = solve(prob,alg,dt=year/steps_per_orbit,saveat=year*save_every_n_orbits,maxiters=maxiters);
+        time_span = (0.0,duration*year) 
+        prob = ODEProblem(gravity_as_first_order_system,u_init,time_span,mass)
+        # Now do the requested integration and time how long it takes
+        @time sol = solve(prob,alg,dt=year/steps_per_orbit,saveat=year*save_every_n_orbits,maxiters=maxiters, force_dtmin=false);
+    else # Other algorithms heuristically pick a timestep
+        # First do a very short integration to make sure code is compiled before timing
+        sol = solve(prob,alg,saveat=year*save_every_n_orbits);
+        time_span = (0.0,duration*year) 
+        prob = ODEProblem(gravity_as_first_order_system,u_init,time_span,mass)
+        # Now do the requested integration and time how long it takes
+        @time sol = solve(prob,alg,saveat=year*save_every_n_orbits,maxiters=maxiters);
+    end
+    separation_init = calc_separation(u_init)
+    Lz_init = calc_angular_momentum(u_init,mass)
+    E_init = calc_energy(u_init,mass)
+    # Make plots
+    plot_angle    = scatter(sol.t,calc_phase_error(sol,year=year), xlabel = "Time", ylabel = "Phase error", markersize=0, legend = false, grid=:no, xticks=0:round(duration*year/2,sigdigits=1):duration*year)
+    plot_distance = scatter(sol.t,calc_separation.(sol.u).-separation_init, xlabel = "Time", ylabel = "Separation", markersize=0, legend = false, grid=:no, xticks=0:round(duration*year/2,sigdigits=1):duration*year)
+    plot_energy   = scatter(sol.t,map(x->calc_energy(x,mass).-E_init,sol.u), xlabel = "Time", ylabel = "Energy Error", markersize=0, legend = false, grid=:no, xticks=0:round(duration*year/2,sigdigits=1):duration*year)
+    plot_Lz       = scatter(sol.t,map(x->calc_angular_momentum(x,mass).-Lz_init,sol.u), xlabel = "Time", ylabel = "L_z Error", markersize=0, legend = false, grid=:no, xticks=0:round(duration*year/2,sigdigits=1):duration*year, yformatter=((x)->Printf.@sprintf "%0.1e" x))
+    if length(plt_title) >= 1 
+		plt = plot( plot_energy, plot_Lz, plot_distance, plot_angle, layout = (2,2), plot_title=plt_title )
+	else
+		plt = plot( plot_energy, plot_Lz, plot_distance, plot_angle, layout = (2,2) )
+	end
+	
+	plt
+end
+
+# ╔═╡ f14d96ef-d885-403a-8f2c-4023abb8db71
+make_test_plots_v1(alg=Euler(), duration=100, plt_title="Euler, 1st order")
+
+# ╔═╡ 590ad389-9037-4a23-ab35-5bea96e32b11
+make_test_plots_v1(alg=Heun(), duration=1000, plt_title="Heun, 2nd order")
+
+# ╔═╡ cbf0d4f7-a10c-4499-9bd5-052a21e3c984
+make_test_plots_v1(alg=Midpoint(), duration=1000, plt_title="Midpoint, 2nd order")
+
+# ╔═╡ c49f5f6d-1ceb-40a3-8032-a74b465936a7
+make_test_plots_v1(alg=RK4(), duration=1000, plt_title="Runge-Kutta 4th order")
+
+# ╔═╡ b4d95d86-254c-4982-bd15-5ff263ff750d
+make_test_plots_v1(alg=Tsit5(), duration=1000,plt_title="Tsit5")
+
+# ╔═╡ 8f68ba9a-ab88-4472-b19b-9f30b3f562e6
+make_test_plots_v1(alg=DP8(), duration=1000, plt_title="Dormand-Prince, ~8th order")
+
+# ╔═╡ efcc2856-fb3e-45c1-9f70-8e6f4cb979ec
+make_test_plots_v1(alg=Vern8(), duration=1000, plt_title="Verner's Runge-Kutta,  ~8th order")
 
 # ╔═╡ 8e59c119-1850-424f-9a78-1d6852054c26
 md"""
@@ -686,13 +691,15 @@ Setup for algorithms that uses knowledge that this is a Hamiltonian system
 - `mass`: masses of bodies ([1, 0.001])            
 """
 function make_test_plots_v2(; duration=100, alg=KahanLi6(), steps_per_orbit=36, 
-        save_every_n_orbits=1, init_separation = 1, mass=[1.0,0.001], plt_title="")
+        save_every_n_orbits=1, init_separation = 1, mass=FixedSizeArray([1.0,0.001]), plt_title="")
     @assert length(mass) == 2  # Phase and separation error only make sense for 1 planet
     # Setup initial conditions
     init_velocity = sqrt(sum(mass)/init_separation) # Uniform circular motion
     year = 2pi*sqrt(init_separation^3/sum(mass))    # Kepler's third law
     r_init = init_separation .* [-mass[2]/sum(mass), 0, 0, mass[1]/sum(mass), 0, 0 ]
     v_init = init_velocity   .* [0, -mass[2]/sum(mass), 0, 0, mass[1]/sum(mass), 0 ]
+	r_init = FixedSizeArray(r_init)
+	v_init = FixedSizeArray(v_init)
     @assert length(r_init) == length(v_init) == 3 * length(mass)
     # First do a very short integration to make sure code is compiled before timing
     time_span = (0.0,0.01*year) 
@@ -792,7 +799,7 @@ For an $n$th-order integrator the error term due to _truncation_ is generally of
 
 # ╔═╡ 62844569-a5b2-4257-9f2b-1fe8257082dd
 md"""
-k.  Pick an accuracy target (e.g., $\Delta~$ or phase error at the end of the simulation).  Then tinker with the the number of steps per orbit, so that the results with different integrators achieve similar accuracy.  (No need to be super precise about this.  E.g., you might aim for the exponent to be the same, but not worry about the leading digit.)  Then compare the time required to achieve the target accuracy with different integrators.  Which algorithms and time-steps would you recommend for performing an N-body integration of the solar system?
+k.  Pick an accuracy target (e.g., $\Delta E~$, $\Delta L_z~$, or phase error at the end of the simulation).  Then tinker with the the number of steps per orbit, so that the results with different integrators achieve similar accuracy.  (No need to be super precise about this.  E.g., you might aim for the exponent to be the same, but not worry about the leading digit.)  Then compare the time required to achieve the target accuracy with different integrators.  Which algorithms and time-steps would you recommend for performing an N-body integration of the solar system?
 """
 
 # ╔═╡ 3a55e7e6-b091-402f-a960-087a21edb6ae
@@ -804,7 +811,7 @@ display_msg_if_fail(check_type_isa(:response_3j,response_3j,[AbstractString,Mark
 # ╔═╡ cb29423a-b1cf-43f2-8b4e-a6fe74ae2c71
 md"""
 
-l.  How long would it take to integrate this system for $10^8$ orbits?  
+l.  How long (in hours) would it take to integrate this system for $10^9$ orbits?  
 """
 
 # ╔═╡ 82fdb87f-6d17-407a-9fdf-4e1385a60a91
@@ -836,6 +843,7 @@ TableOfContents()
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+FixedSizeArrays = "3821ddf9-e5b5-40d5-8e25-6813ab96b5e2"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
@@ -844,6 +852,11 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
+DifferentialEquations = "~7.16.1"
+FixedSizeArrays = "~1.2.0"
+LaTeXStrings = "~1.4.0"
+Plots = "~1.40.19"
+PlutoTeachingTools = "~0.4.5"
 PlutoUI = "~0.7.52"
 """
 
@@ -853,7 +866,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "7789b4ef119c592b966d9002777d5c70b80bbf49"
+project_hash = "0430a3cf837ecddbc27f78ef1d68726e86127b74"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "60665b326b75db6517939d0e1875850bc4a54368"
@@ -1107,6 +1120,11 @@ deps = ["TranscodingStreams", "Zlib_jll"]
 git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.7.8"
+
+[[deps.Collects]]
+git-tree-sha1 = "6c973f8071ca1f39ce0ed20840f908a44575fa5e"
+uuid = "08986516-18db-4a8b-8eaa-f5ef1828d8f1"
+version = "1.0.0"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
@@ -1568,6 +1586,17 @@ deps = ["Statistics"]
 git-tree-sha1 = "05882d6995ae5c12bb5f36dd2ed3f61c98cbb172"
 uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 version = "0.8.5"
+
+[[deps.FixedSizeArrays]]
+deps = ["Collects"]
+git-tree-sha1 = "c17496e474024e0c2330b20447dc536c86930510"
+uuid = "3821ddf9-e5b5-40d5-8e25-6813ab96b5e2"
+version = "1.2.0"
+weakdeps = ["Adapt", "Random"]
+
+    [deps.FixedSizeArrays.extensions]
+    AdaptExt = "Adapt"
+    RandomExt = "Random"
 
 [[deps.Fontconfig_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Zlib_jll"]
@@ -3536,7 +3565,7 @@ version = "1.9.2+0"
 # ╠═32dae7aa-e65a-4add-8b81-04c5eb30499a
 # ╠═5bbe0d8f-62fc-4375-8111-f8774f0b2da8
 # ╟─ffd49b82-5bc5-4f01-bff6-12102282ee51
-# ╠═dc413bad-9d28-487f-855a-e68295abee75
+# ╟─dc413bad-9d28-487f-855a-e68295abee75
 # ╟─4ab79682-ac15-4b51-a630-464bdf5f9108
 # ╠═f14d96ef-d885-403a-8f2c-4023abb8db71
 # ╠═590ad389-9037-4a23-ab35-5bea96e32b11
