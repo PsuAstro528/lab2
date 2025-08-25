@@ -17,7 +17,6 @@ using Plots, LaTeXStrings
 begin
 	using Random
 	using LinearAlgebra
-	using CpuId
 end	
 
 # ╔═╡ ea0a7ca2-503f-4d61-a3d4-42503f322782
@@ -27,344 +26,609 @@ begin
 	eval(Meta.parse(code_for_check_type_funcs))
 end
 
-# ╔═╡ c6ca6335-09bc-45e6-96bb-b7ca91e57917
+# ╔═╡ 4ac5cc73-d8d6-43d5-81b2-944d559fd2ca
 md"""
-# Astro 528 Lab 2, Exercise 1
+# Astro 528 Lab 2, Exercise 4
+## Benchmarking common numerical functions
 
-## Cost of Numerical Linear Algebra
+### Review of benchmarking code
+
+First, we'll have a quick refresher from Exercise 1.  Julia provides several tools for measuring code performance. Perhaps the simplest way is using the [`@time`](https://docs.julialang.org/en/v1.0/base/base/#Base.@time) or [`@elapsed`](https://docs.julialang.org/en/v1.0/base/base/#Base.@elapsed) macros, such as
 """
 
-# ╔═╡ c888afb4-59da-4d7b-a050-df84f3735202
-md"""
-## Memory Requirements for Linear Algebra Problems[^acklmemreq] 
-
-Consider a modern laptop with 8 GB ($=8*2^{30}$) of usable memory. Assume it uses 8 bytes of memory to store each floating point number (i.e., Float64, double precision, real\*8).   Feel free to add some cells with code to compute the answers to the equestions below.
-"""
-
-# ╔═╡ b9157cf9-99da-46ee-8ba0-ed6a95153f74
-md"""
-### Theory
-**Q1c:** What is the number of rows in the largest square matrix that the above computer could fit into its available memory at one time? 
-
-"""
-
-# ╔═╡ 11c54089-54c9-40a6-8a31-24319694dbb3
-aside(tip(md"Yes, we skipped 1a & 1b."))
-
-# ╔═╡ b0873452-b9b5-4bc5-bb76-5f299a6d366e
-response_1c = missing
-
-# ╔═╡ cc584d2a-2a3b-4898-b753-1a7275712ad2
-display_msg_if_fail(check_type_isa(:response_1c,response_1c,Integer)) 
-
-# ╔═╡ e69c7809-ec6c-4f3a-b869-100381d40bf9
-if !@isdefined(response_1c)  || ismissing(response_1c)
-	nothing
-elseif response_1c == floor(Int,sqrt(8*2^30/8))
-	correct()
-else
-	almost(md"Try again")
-end
-
-# ╔═╡ 83befcf5-0b81-47ce-9157-fb6493084c3c
-begin
-	my_cpu_speed =  has_cpu_frequencies() ? cpu_base_frequency()*1e6 : 1e9
-	my_flops = 1 * my_cpu_speed  # Ball-park assumption, depends on CPU architecture
-end;
-
-# ╔═╡ 02f28198-d780-48a5-b4e9-74bdecb4e83a
-md"""
-We can query the CPU to ask what it's base frequency ("clock speed") is.  The number of floating point operations per second can differ from the CPU's clock speed, but for now, we'll assume one floating point operation each clock cycle.
-In that case, we can estimate that your CPU can compute $my_flops floating point operations each second.
-"""
-
-# ╔═╡ ea68d6eb-a542-44bf-b0e7-815e2372bc33
-md"""
-**Q1d:** Estimate how long (in seconds) would it take to solve the maximum size linear system that would fit into memory at once, if we use LU factorization to solve a linear system.  You may assume the computation is maximally efficient, the computer reaches peak performance and the LU decomposition requires $(2/3)*N^3$ floating point operations, where $N$ refers to the number of rows in the square array being factorized.
-"""
-
-# ╔═╡ 484b47d6-65de-497a-b78f-6996c8787de8
-response_1d = missing
-
-# ╔═╡ 8e2045c2-c5de-4895-9719-efb9de113dec
-display_msg_if_fail(check_type_isa(:response_1d,response_1d,Real)) 
-
-# ╔═╡ 2da17c61-a8d7-4dc2-8209-69fe809e9d4f
-begin
-	local N = floor(Int,sqrt(8*2^30/8))
-	local num_ops = (2//3)*N^3
-	response_1d_ref = num_ops/my_flops
-	if !@isdefined(response_1d)  || ismissing(response_1d)
-		nothing
-	elseif response_1d < response_1d_ref/10
-		almost(md"Are you sure?  That seems low to me.")
-	elseif response_1d > response_1d_ref*10
-		almost(md"Are you sure?  That seems high to me.")
-	else
-		correct(md"That seems like a plaussible runtime to me.")	
-	end
-end
-
-# ╔═╡ 4e8e86ed-92b0-4aa5-945b-ef6193cb2559
-md"""
-**Q1e:** Does memory or compute time limit the size of system that can be practically solved with LU decomposition for this modern laptop?"""
-
-# ╔═╡ 1d4275fd-3208-477d-b26e-be23940035ba
-response_1e = missing
-
-# ╔═╡ c64bd8d8-6801-46a7-876b-c75b83300416
-display_msg_if_fail(check_type_isa(:response_1e,response_1e,Markdown.MD)) 
-
-# ╔═╡ 5cc54a66-461c-4bb3-8e29-2079adeff04f
-md"""**Q1f:** Now consider a high-end server with 1TB of RAM (such as Roar Collabs's high-memory nodes).  
-How many rows are in the largest square matrix that would fit into its memory at once?"""
-
-# ╔═╡ 30efc3ea-a2a2-48f8-833f-6b51845e47dc
-response_1f = missing
-
-# ╔═╡ 33bc47b6-f48b-4e24-bb54-fa794f04e166
-display_msg_if_fail(check_type_isa(:response_1f,response_1f,Integer)) 
-
-# ╔═╡ 3fab2e27-766c-4464-9b6c-e5235a80183a
-if !@isdefined(response_1f)  || ismissing(response_1f)
-	nothing
-elseif response_1f == floor(Int,sqrt(1024*2^30/8))
-	correct()
-else
-	almost(md"Try again")
-end
-
-# ╔═╡ 9af89fd2-a5f6-4807-beb6-d3fa9fa89b69
-md"""**1g:** How long do you estimate it would take (assuming performance similar to the system you're using)?"""
-
-# ╔═╡ 7e42beb2-f525-40c4-9332-5c0b4bd27e9c
-response_1g = missing
-
-# ╔═╡ 4d3b7121-8409-492f-8de5-7cc7859f193f
-display_msg_if_fail(check_type_isa(:response_1g,response_1g,Real)) 
-
-# ╔═╡ a847804b-886e-4046-a7b8-52f3fbfc9376
-begin
-	local N = floor(Int,sqrt(1024*2^30/8))
-	local num_ops = (2//3)*N^3
-	response_1g_ref = num_ops/my_flops
-	if !@isdefined(response_1g)  || ismissing(response_1g)
-		nothing
-	elseif response_1g < response_1g_ref/10
-		almost(md"Are you sure?  That seems low to me.")
-		correct()
-	elseif response_1g > response_1g_ref*10
-		almost(md"Are you sure?  That seems high to me.")
-	else
-		correct(md"That seems like a plaussible runtime to me.")	
-	end
-end
-
-# ╔═╡ 702843dc-83a9-4fde-b7fa-989e1e5e6c88
-md"**Q1h:** Does memory or run-time limit the largest matrix that can facotrized on a high-end server?  Why?"
-
-# ╔═╡ 59e0467c-a8a8-43fe-a735-146e001a14fb
-response_1h = missing
-
-# ╔═╡ 64c04240-24a4-4d1e-b03d-3ca8dd1fdd38
-display_msg_if_fail(check_type_isa(:response_1h,response_1h,Markdown.MD)) 
-
-# ╔═╡ 607ebb54-065f-44e9-a66c-686dae2dcd54
-md"""
-### Comparing Theory to Practice
-
-**Q1i:** Following your work above, estimate how long (in seconds) it would take to solve a linear system with $N=100$ via LU factorization.  
-"""
-
-# ╔═╡ dc2116e4-5995-4b81-8d19-3656da4c34dc
-response_1i = missing
-
-# ╔═╡ 5dc61f62-57f0-4c1e-9373-d6d00931d12d
-display_msg_if_fail(check_type_isa(:response_1i,response_1i,Real)) 
-
-# ╔═╡ 62dd7c5b-21a3-4c53-99a7-b6f7e57e39f2
-begin
-	local N = 100
-	local num_ops = (2//3)*N^3
-	response_1i_ref = num_ops/my_flops
-	if !@isdefined(response_1i)  || ismissing(response_1i)
-		nothing
-	elseif response_1i < response_1i_ref/10
-		almost(md"Are you sure?  That seems low to me.")
-		correct()
-	elseif response_1i > response_1i_ref*10
-		almost(md"Are you sure?  That seems high to me.")
-	else
-		correct(md"That seems like a plaussible runtime to me.")	
-	end
-end
-
-# ╔═╡ 261c65e6-c93e-4253-b828-a92ef90ed797
-md"""h.  Now, we'll benchmark how long it actually takes to solve a linear system with $N=100$ via [LU factorization](https://docs.julialang.org/en/v1/stdlib/LinearAlgebra/index.html#LinearAlgebra.lu) and the ["left division operator" (`\`)](https://docs.julialang.org/en/v1/base/math/#Base.:\\-Tuple{Any,%20Any}) using the following function and `@time` (_not_ `@btime`).  Importantly, we're going to repeat this a few times.  
-"""
-
-# ╔═╡ 9a8c7c33-0e71-42fa-b2a3-e6bbd17c2b81
-N = 100  # Set problem size
-
-# ╔═╡ ca8ca136-d01a-4909-90df-331b82f1b8f5
-begin  # Create problem data
-	A = rand(N,N)
-	x = rand(N)
-	y = A*x
-end;
-
-# ╔═╡ 23f7567b-3493-407e-a251-58d5dbecaed1
-"""
-   `solve_Ax_via_LU_factorization(A, y)`
-Solve the equation y = A x for x using LU Factorization.
-See the [Julia manual](https://docs.julialang.org/en/v1/stdlib/LinearAlgebra/index.html#LinearAlgebra.lu) for implementation details.
-"""
-function solve_Ax_via_LU_factorization(A::AbstractMatrix, y::AbstractVector)
-   	local F = lu(A)   
-   	local x = F \ y
-end
-
-# ╔═╡ 30cc4863-e53a-45b9-9673-689a236e59f6
-md"""
-
-Julia provides several tools for measuring code performance. Perhaps the simplest way is using the [`@time`](https://docs.julialang.org/en/v1.0/base/base/#Base.@time) or [`@elapsed`](https://docs.julialang.org/en/v1.0/base/base/#Base.@elapsed) macros, such as
-"""
-
-# ╔═╡ 1d3f387e-caed-4b60-a74a-8576875b9270
-with_terminal() do 
-	@time x1 = solve_Ax_via_LU_factorization(A,y)
-	@time x2 = solve_Ax_via_LU_factorization(A,y)
-	@time x3 = solve_Ax_via_LU_factorization(A,y)
-end
+# ╔═╡ 637f6a84-ad01-43a7-899b-b7867fbe3b3d
+@elapsed randn(1000)
 
 # ╔═╡ c23045a0-56b2-4e1e-b5d3-8e248fd1bffd
 md"""
-The `@time` macro prints the time, but returns the value of the following expression. (Pluto doesn't normally show the output printed to the terminal inside the notebook.  You can either find it in the window where you're running the Pluto server or you can use the `with_terminal()` function provided by PlutoUI.jl to view the output.)  The `@elapsed` macro discards the subsequent expression's return value and just returns the elapsed time evaluating the expression.
+The `@time` macro prints the time, but returns the value of the following expression. (Pluto doesn't normally show the output printed to the terminal inside the notebook.  You can either find it in the window where you're running the Pluto server or you can use the `with_terminal()` function provided by PlutoUI.jl to view the output.)  The `@elapsed` macro discards the following expressions return value and returns the elapsed time evaluating the expression.
 """
 
-# ╔═╡ afeda1b5-75ae-4c82-a5eb-d6853083ce14
-md"""
-**Q1j:**  Is there any noticeable difference in your three results?  If so, what do you think explains the difference?"""
-
-# ╔═╡ 06da82e6-256e-4a46-b8d5-090e6595940c
-response_1j = missing
-
-# ╔═╡ 324e7a1d-cb0b-4c01-893f-672ecffcd2fa
-display_msg_if_fail(check_type_isa(:response_1j,response_1j,Markdown.MD)) 
-
-# ╔═╡ e3bfd6bc-261d-4e69-9ce6-e78d959c13be
-md"""There are even more sophisticated macros in the [BenchmarkTools.jl](https://github.com/JuliaCI/BenchmarkTools.jl) package which provides `@btime` and `@belapsed` that provide outputs similar to `@time` and `@elapsed`.  However, these take longer than @time and `@elapsed`, since they run the code multiple times in an attempt to give more accurate results.  It also provides a `@benchmark` macro that is quite flexible and provides even more detailed information.  
-"""
-
-# ╔═╡ 5330262e-74a1-4c0e-8ba9-c458deeb8f6a
-md"""Now, try try benchmarking the same code using the `@benchmark` macro.  (This will take several seconds.)"""
-
-# ╔═╡ 26921972-788f-412d-856d-3edd6c2c93b1
-aside(tip(md"`@benchmark` is a macro.  Macros take code as input and transform it into (usually longer and more complicated) code as output.  In order to make sure that Julia can optimze the code appropriately we *interpolate* the variables `A` and `x` using the `$` symbol."))
-
-# ╔═╡ ef6e093f-613a-47ed-bcb1-f593f41cf73a
-@benchmark solve_Ax_via_LU_factorization($A,$y) #seconds=5
-
-# ╔═╡ f43b83a3-2560-4036-b6f4-20cc3860efb0
-md"""
-**Q1k:**  Is there a significant difference between the minimum and maximum time required?  If so, what do you think is the biggest effect in explaining the difference?  Which output do you think is most relevant for your typical scientific applications?  """
-
-# ╔═╡ d985b122-1ea7-4dc7-b724-45eb77bcf146
-response_1k = missing
-
-# ╔═╡ 03a78cda-38ba-4c74-b777-1a51dacc223c
-display_msg_if_fail(check_type_isa(:response_1k,response_1k,Markdown.MD)) 
-
-# ╔═╡ e86ed6db-6e4a-4652-9e1b-7a6a5c168927
-md"""**Q1l:**  How does your result compare to what you estimated analytically in part i?"""
-
-# ╔═╡ a8fe454d-34c4-4619-ace4-610975a8df5f
-response_1l = missing
-
-# ╔═╡ 50902545-34bb-4e77-88b7-afc4dac439ec
-display_msg_if_fail(check_type_isa(:response_1l,response_1l,Markdown.MD)) 
-
-# ╔═╡ 7c98f340-2719-4230-a7ae-e69db51e66cb
-md"""
-## Scaling with Problem Size
-"""
-
-# ╔═╡ 616fabd6-0ea7-4524-a6a1-c4c60d4f87d0
-md"""
-Next, lets consider several relatively small problem sizes (e.g., no larger than a few hundred) and benchmark `solve_Ax_via_LU_factorization` to see how the performance scales as we increase $N$.  We'll plot the results on a log-log scale and compare to a simplistic analytic model.
-"""
-
-# ╔═╡ cdfbad83-736b-44ac-a792-3bbc37fb1076
-N_list = 2 .^(1:9)
-
-# ╔═╡ 84539bf8-d5e4-4f75-b5fb-1197ca6221f2
-begin
-	model_time_list = 2//3 .* N_list.^3 ./ my_flops  
-end;
-
-# ╔═╡ fb07fab4-89e4-4e59-bfb5-2e3fd5e26f37
-begin
-	time_list = zeros(length(N_list))
-	for (i,N) in enumerate(N_list)
-	  local A = rand(N,N)
-	  local x = rand(N)
-	  local y = A*x
-	  time_list[i] = @belapsed solve_Ax_via_LU_factorization($A,$y)
-	end
-	time_list
-end;
-
-# ╔═╡ 3715f7c6-48c7-4706-a7b7-1757c2891240
-begin
-	plt = plot()
-	plot!(plt,log10.(N_list),log10.(model_time_list), xlabel=L"\log_{10} N", ylabel = L"\log_{10}(\mathrm{Time}/s)", label="Model", legend=:bottomright) 
-	scatter!(plt,log10.(N_list),log10.(time_list), label="Actual") 
-	plt
+# ╔═╡ 6dcedd62-c606-43ba-b2f6-e018aefcb035
+with_terminal() do 
+	@time rand(1000)
 end
 
-# ╔═╡ 20cd5f33-d865-470a-9ef4-0cd18a5bba00
-md"""
-**Q1n:** How does the actual performance compare the analytic model?  What is your guess for the cause of any deviations?"""
-
-# ╔═╡ ac0374ce-9a02-4fdb-a1e9-5e6fac9192c2
-response_1n = missing
-
-# ╔═╡ ba2c71eb-ff66-43a1-8056-982ccfb41510
-display_msg_if_fail(check_type_isa(:response_1n,response_1n,Markdown.MD)) 
-
-# ╔═╡ 9ad38265-3d12-4df5-b251-bf7f19fe8947
-md"**Q1o:** For real life problems, what other considerations are likely to limit performance?"
-
-# ╔═╡ c06d4df7-b8ff-493e-b933-eee61baaf651
-response_1o = missing
-
-# ╔═╡ 732cf450-0330-43fa-aa0b-6c0fb1b02fd7
-display_msg_if_fail(check_type_isa(:response_1o,response_1o,Markdown.MD)) 
-
-# ╔═╡ 19617de2-d198-43d6-a3da-71b7cdfc0be1
-md"**Q1p:** How could one practically solve even larger linear systems?"
-
-# ╔═╡ 7c0a4bda-cd4b-4bef-a2f6-84efe76670aa
-response_1p = missing
-
-# ╔═╡ ec7d8268-7f97-4ba3-a0ab-717506002fb6
-display_msg_if_fail(check_type_isa(:response_1p,response_1p,Markdown.MD)) 
-
-# ╔═╡ fb3f1372-a7fc-4698-a8ce-d96354520a63
-md"""[^acklmemreq]: Acknowledgment:  The questions in this subsection are based on Oliveira & Stewarts Writing Scientific Software, Chapter 5, Problem #6.
+# ╔═╡ e3bfd6bc-261d-4e69-9ce6-e78d959c13be
+md"""There are even more sophisticated macros in the [BenchmarkTools.jl](https://github.com/JuliaCI/BenchmarkTools.jl) package which provides `@btime` and `@belapsed` that provide outputs similar to `@time` and `@elapsed`.  However, these take longer than @time and `@elapsed`, since they run the code multiple times in an attempt to give more accurate results.  It also provides a `@benchmkark` macro that is quite flexible and provides even more detailed information.  
 """
 
+# ╔═╡ f320d2bf-7bd5-4374-95af-17d787c516b4
+md"""
+### Benchmarking the default random number generator
+"""
+
+# ╔═╡ 2a5eb6c7-9b8c-4923-8fe4-e7211c6c820f
+md"Let's define a function, `my_function_0_args` that takes a single arguement, the number of samples, and calls a mathematical function with zero arguments (e.g., `rand`) to be benchmarked for a given problem size.  "
+
+# ╔═╡ aa8367f9-33f4-490e-851b-5f02f15db48d
+aside(tip(md"This is a short-hand way to write a small function. "))
+
+# ╔═╡ b3e64508-319f-4506-8512-211e30be4bee
+my_function_0_args(N::Integer) = rand(N)
+
+# ╔═╡ a0a24490-3136-45e4-8f55-44448d8366d1
+md"Next, we'll specificy what problem sizes you'd like to benchmark as a vector of integers named `num_list`.  (At some point you may want to add larger problem sizes, but beware that that will result in a delay while the rest of the notebook updates.)"
+
+# ╔═╡ 69c39140-ba66-4345-869c-a5499d5d4376
+num_list = [1,2,4,8,16,32,64,128,256,512]
+
+# ╔═╡ 2e0b53c8-4107-485f-9f33-d921b6fc0c05
+md"I've provided a function `benchmark_my_function` at the bottom of the notebook that will help us compactly compute benchmarks for `my_function_0_args`."
+
+# ╔═╡ 13f684b2-b90d-4696-8f0f-ea7b3d223e07
+md"""
+One common issue in measuring performance of numerical calculations is that the total time required can often be affected (or even dominated by) tasks other than the numerical computations (e.g., memory allocations).  
+Therefore, in the fiture above, I've shown performance of both the standard version (that includes allocating memory to hold the results) and an *in-place* version that writes the output into a pre-allocated area of memory.
+To do that, I needed to create/call an in-place version of the function that we're benchmarking.  
+"""
+
+# ╔═╡ 6e8ea4cd-3cc1-42af-b243-ac6b837b6361
+my_function_0_args!(out::AbstractArray) = rand!(out)
+
+# ╔═╡ 1fe91b8a-c8d6-45ec-a4c4-337107630616
+tip(md"In Julia, there's a convection to end function names in a '!' if they change the values of one of the function arguements.")
+
+# ╔═╡ 6753c21c-e441-401e-b519-76a6ddf8b4ea
+md"""
+# Functions of One Variable
+"""
+
+# ╔═╡ 928fe18c-2b34-427f-afdb-6273a0ce135e
+md"Now, we'll generate several datasets (containing randomly generated values) to use for testing function with different size arrays here, so that we don't have to keep regenerating datasets over and over."
+
+# ╔═╡ fd7c88ef-02fb-408f-a551-45a93d873ded
+begin
+	x_list = rand.(num_list)
+	y_list = rand.(num_list)
+end;
+
+# ╔═╡ ba4b35c8-0fe8-4a25-9817-d13c0cd98c6f
+md"We'll start by benchmarking the square root function when applied to each element of an array."
+
+# ╔═╡ bb4e3e7e-d8da-4c53-b861-0e66237aae3c
+sqrt_broadcasted(x) = sqrt.(x);
+
+# ╔═╡ ae86274b-4e35-4584-9b9d-f4970abbfccd
+function sqrt_inplace(out::AbstractArray, x::AbstractArray) 
+	@assert size(out) == size(x) 
+	for i in 1:length(x)
+		out[i] = sqrt(x[i])
+	end
+	return out
+end
+
+# ╔═╡ 6e1e699f-4f4a-4a21-946f-e763eb106f37
+md"Now try benchmarking some univariate functions of your own and comparing them to `sqrt`.  Write a function `my_function_1_arg` that takes an array and applies a function of your choice to the input array."
+
+# ╔═╡ 39ed7918-8926-4866-8b25-c61dbbd35991
+my_function_1_arg(x::Array) =  missing # TODO Replace code here
+
+# ╔═╡ a403c0f3-fc4a-4bc1-87c4-8a2d5d15e1a0
+begin
+	my_function_1_arg_is_good_to_go = false
+	if !@isdefined(my_function_1_arg)
+		func_not_defined(:my_function_1_arg)
+	elseif length(methods(my_function_1_arg,[Array,])) <1
+		PlutoTeachingTools.warning_box(md"`my_function_1_arg` should take an  `Array` as its arguement")
+	elseif ismissing(my_function_1_arg([1,2,3]))
+		still_missing()
+	elseif size(my_function_1_arg([1,2,3]))!=(3,)
+		almost(md"The size of the `my_function_1_arg`'s output doesn't match the size of the input.")
+	else
+		my_function_1_arg_is_good_to_go = true
+		correct()
+	end
+end
+
+# ╔═╡ 81731b59-a87d-4cfc-ac99-9cd35dfe3881
+md"""
+Now write another version of your function, `my_function_1_arg!`, that now takes two arrays, one where it will write outputs and one input array."""
+
+# ╔═╡ 674319bf-ca94-43ec-8dad-f8e452459c25
+function my_function_1_arg!(out::AbstractArray, x::AbstractArray) 
+	@assert size(out) == size(x) 
+	for i in 1:length(x)
+		# TODO: Insert code to compute your function here
+	end
+	return out
+end
+
+# ╔═╡ 75fc22e9-8f8b-42a1-af77-d10f12255105
+begin
+	my_function_1_arg_inplace_is_good_to_go = false
+	if !@isdefined(my_function_1_arg!)
+		func_not_defined(:my_function_1_arg!)
+	elseif length(methods(my_function_1_arg!,[Array,Array,])) != 1
+		PlutoTeachingTools.warning_box(md"`my_function_1_arg!` should take two  `Array`'s as its arguements")
+	elseif ismissing(my_function_1_arg!(zeros(3),[1,2,3]))
+		still_missing()
+	elseif size(my_function_1_arg!(zeros(3),[1,2,3]))!=(3,)
+		almost(md"The size of the `my_function_1_arg!`'s output doesn't match the size of the input.")
+	else
+		my_function_1_arg_inplace_is_good_to_go = true
+		correct()
+	end
+end
+
+# ╔═╡ 3115fb89-6fb5-451f-9f63-47c5c9693260
+md"""
+We can check whether your two functions produce identical output for an example dataset.
+"""
+
+# ╔═╡ 52ba1f4c-83e0-487d-be52-b60c0964d3ae
+let
+	out = my_function_1_arg(last(x_list))
+	
+	out_inplace = zeros(length(last(x_list)))
+	my_function_1_arg!(out_inplace,last(x_list))
+	
+	@test all(out_inplace .== out)
+end
+
+# ╔═╡ 1116a9e0-64a4-4ae2-a0d8-d52fcbe2a275
+md"""
+Once you update your function, you should see additional points show up in the plot above.  Compare the performance of the different functions.
+"""
+
+# ╔═╡ 24e6bf47-d527-48d2-a9bb-7879ce3f9a95
+md"""
+# Functions of Two Variables
+"""
+
+# ╔═╡ 5d234d6c-be3d-4d0f-bd58-774b6786db54
+md"Now, let's try benchmarking some functions that take two variables."
+
+# ╔═╡ 11df2b04-2bef-497e-a064-cbcd159aecc7
+add_broadcasted(x, y) = x.+y;
+
+# ╔═╡ 8320739f-ec14-4a49-b374-a0baa198f646
+mul_broadcasted(x::Array, y::Array) = x.*y 
+
+# ╔═╡ e352d85a-b8ce-4355-8b0b-9c28465dd006
+div_broadcasted(x,y) = x./y;
+
+# ╔═╡ eebad38f-795d-4e27-8e22-b877d4746a6d
+tip(md"""
+Code to generate date for the pro-tip above is hidden in the cells below.  To review hidden code, click the eye icon to the left of the hidden cell.
+""")
+
+# ╔═╡ 3cc0a54f-bfb9-4d68-971a-c9fe2a7ba705
+function mul_loop(x::Array, y::Array)
+	@assert size(x) == size(y)  
+	@assert eltype(x) == eltype(y)
+	z = Array{eltype(x)}(undef,size(x))
+	for i in eachindex(x,y) 
+		z[i] = x[i] * y[i]
+	end
+	z
+end
+
+# ╔═╡ 60f1ac1a-c547-4339-8e8e-708b5072c46a
+function mul_loop!(z::Array, x::Array, y::Array)
+	@assert size(x) == size(y) == size(z)
+	@assert eltype(x) == eltype(y) == eltype(z)
+	for i in eachindex(x,y) 
+		z[i] = x[i] * y[i]
+	end
+	z
+end
+
+# ╔═╡ a32c730d-64eb-4e06-81c9-bc8b888280b4
+md"""
+Now let's compare the performance of in-place versions of those functions.
+"""
+
+# ╔═╡ c314f7bd-fdfd-4efe-93ef-c70a334ffe10
+function add_loop!(z::Array, x::Array, y::Array)
+	@assert size(x) == size(y) == size(z)
+	@assert eltype(x) == eltype(y) == eltype(z)
+	for i in eachindex(x,y) 
+		z[i] = x[i] + y[i]
+	end
+	z
+end;
+
+# ╔═╡ f128512e-2740-4d70-a8f7-358b493fa527
+function div_loop!(z::Array, x::Array, y::Array)
+	@assert size(x) == size(y) == size(z)
+	@assert eltype(x) == eltype(y) == eltype(z)
+	for i in eachindex(x,y) 
+		z[i] = x[i] / y[i]
+	end
+	z
+end;
+
+# ╔═╡ 0ce6409c-3aa4-4446-ae13-81c4e743d322
+md"Create a function `my_function_2_args` that takes two arrays and applies computes a function of your choice to them."
+
+# ╔═╡ f13619d1-6ece-42be-965d-ab6bb9e9b8cd
+my_function_2_args(x::Array, y::Array) = missing  # Replace missingwith yoru function
+
+# ╔═╡ 340808ea-e99b-4de7-ad55-b2d812ff0f4d
+begin
+	my_function_2_args_is_good_to_go = false
+	if !@isdefined(my_function_2_args)
+		func_not_defined(:my_function_2_args)
+	elseif length(methods(my_function_2_args,[Array,Array])) <1
+		PlutoTeachingTools.warning_box(md"`my_function_2_args` should take two `Array`'s as arguemetns")
+	elseif ismissing(my_function_2_args([1,2,3],[4,5,6]))
+		still_missing()
+	elseif size(my_function_2_args([1,2,3],[4,5,6]))!=(3,)
+		almost(md"The size of the `my_function_2_args`'s output doesn't match the size of the input.")
+	else
+		my_function_2_args_is_good_to_go = true
+		correct()
+	end
+end
+
+# ╔═╡ 4e36a5ed-ad2b-4f7c-9ad9-ecb4b3e312c5
+my_function_2_args!(z::Array, x::Array, y::Array) = missing
+
+# ╔═╡ 21580c47-2b8a-4215-826f-d25b053713ed
+begin
+	my_function_2_arg_inplace_is_good_to_go = false
+	if !@isdefined(my_function_2_args!)
+		func_not_defined(:my_function_2_args!)
+	elseif length(methods(my_function_2_args!,[Array,Array,Array,])) != 1
+		PlutoTeachingTools.warning_box(md"`my_function_2_arg!` should take three  `Array`'s as its arguements")
+	elseif ismissing(my_function_2_args!(zeros(3),[1,2,3],[1,2,3]))
+		still_missing()
+	elseif size(my_function_2_args!(zeros(3),[1,2,3],[1,2,3]))!=(3,)
+		almost(md"The size of the `my_function_2_arg!`'s output doesn't match the size of the input.")
+	else
+		my_function_2_arg_inplace_is_good_to_go = true
+		correct()
+	end
+end
+
+# ╔═╡ e3a5b2fe-0520-4afb-a23c-94d7c06b4026
+md"""
+# Experiment with different functions
+"""
+
+# ╔═╡ 3621793a-427b-40d2-b28d-7bb9c6f3a28c
+md"""
+Now, it's your turn.  Try updating `my_function_1_arg` and `my_function_2_args` to compute a few different mathematical functions.  For example, try a couple of trig functions, and a logarithm. 
+"""
+
+# ╔═╡ 10499798-1ba6-4a2f-827b-aecc4a1f8346
+md"""
+**Q1a:**  How much longer did it take to compute a trig function than simple arithmetic?  How much longer did it take to compute a logarithm than simple arithmetic?
+(Express your responses as ratio of run times.)
+"""
+
+# ╔═╡ ffde1960-8792-4092-9a0b-42b2726bb2da
+response_1a = missing
+
+# ╔═╡ 10f54651-4b05-4806-9a0c-cb0b6afa245b
+display_msg_if_fail(check_type_isa(:response_1a,response_1a,Markdown.MD)) 
+
+# ╔═╡ 2291567f-71a4-4a53-a80c-aab58f29ddf8
+md"""
+**Q1b:**  Did the number of evaluations per second vary significantly depending on the number of elements in the array?  
+How large of an array was necessary before the performance reached its asymptote?
+"""
+
+# ╔═╡ 05e772d4-a2ad-4f16-866c-b8aa3ab7a550
+response_1b = missing
+
+# ╔═╡ eb1ff48b-7dbc-4b37-a18d-77eadc568f5a
+display_msg_if_fail(check_type_isa(:response_1b,response_1b,Markdown.MD)) 
+
 # ╔═╡ 07653065-2ef3-4a63-a25b-1b308c22aff5
-md"## Helper code"
+md"# Setup & Helper code"
+
+# ╔═╡ a4ec3c8d-4335-4ddd-a75b-57b638b9426b
+TableOfContents()
 
 # ╔═╡ b5103197-8961-4fc0-99c9-50fee4e15a1c
 FootnotesNumbered()
+
+# ╔═╡ 9b2cdb77-9330-4a8b-84b5-deed94c19662
+begin
+"""
+	   `benchmark_my_function(f,n_list)`
+	   `benchmark_my_function(f,x_list)`
+	   `benchmark_my_function(f,x_list, y_list)`
+	
+	Benchmarks a user-proved function.  
+	User-provided function may take the number of samples, one array or two arrays.
+	Returns NamedTuple with two lists (num_list, times_list) containing the number of samples and the runtime.
+"""
+	function benchmark_my_function end
+	
+	function benchmark_my_function(f::Function, num_list::Vector{T} ) where { T<:Integer }
+		times_list = zeros(length(num_list))
+		for (i,n) in enumerate(num_list)
+			times_list[i] = @belapsed $f($n)
+		end
+		return (;num_list, times_list)
+	end
+	
+	function benchmark_my_function(f::Function, x_list::Vector{A} ) where { A<:AbstractArray } 
+		times_list = zeros(length(x_list))
+		for (i,x) in enumerate(x_list)
+			times_list[i] = @belapsed $f($x)
+		end
+		return (;num_list, times_list)
+	end
+	
+	function benchmark_my_function(f::Function, x_list::Vector{A}, y_list::Vector{A} ) where { A<:AbstractArray } 
+		@assert length(x_list) == length(y_list)
+		times_list = zeros(length(x_list))
+		for i in 1:length(x_list)
+			x = x_list[i]
+			y = y_list[i]
+			times_list[i] = @belapsed $f($x,$y)
+		end
+		return (;num_list, times_list)
+	end
+end
+
+# ╔═╡ 6b2d4a5c-80bc-4620-9e8a-d8684302a9f2
+benchmarks_0 = benchmark_my_function(my_function_0_args, num_list)
+
+# ╔═╡ 4e1f8fa4-b846-4cbd-a5de-b9e137ec04f9
+benchmarks_sqrt = benchmark_my_function(sqrt_broadcasted, x_list)
+
+# ╔═╡ 185fac9d-ea9e-460a-8f90-d5dad528ed4b
+if my_function_1_arg_is_good_to_go
+	benchmarks_1 = benchmark_my_function(my_function_1_arg, x_list)
+end;
+
+# ╔═╡ d5322db3-501f-467f-a3f4-297258bc2570
+benchmarks_add = benchmark_my_function(add_broadcasted, x_list, y_list)
+
+# ╔═╡ fffd69c6-47d6-411c-ba57-9c52e659f598
+benchmarks_mul = benchmark_my_function(mul_broadcasted, x_list, y_list)
+
+# ╔═╡ 4a45fa07-f4dd-4a76-8bd1-8627060a6fc5
+benchmarks_div = benchmark_my_function(div_broadcasted, x_list, y_list)
+
+# ╔═╡ b8bb2267-83bc-4e5e-a2b0-fe346cce1a33
+let
+		plt2 = plot()
+		scatter!(plt2,benchmarks_add.num_list, log10.(benchmarks_add.num_list./benchmarks_add.times_list), xscale=:log10, label="add Float64s", legend=:topleft)
+		scatter!(plt2,benchmarks_mul.num_list, log10.(benchmarks_mul.num_list./benchmarks_mul.times_list), label="multiply Float64s")
+		scatter!(plt2,benchmarks_div.num_list, log10.(benchmarks_div.num_list./benchmarks_div.times_list), label="divide Float64s")
+		
+		xlabel!(plt2, "Size of Array")
+		ylabel!(plt2, "log_10 (Runtime/s)")
+		title!(plt2,"Benchmarks for element-wise arithmetic (broadcast)")
+		plt2
+end
+
+# ╔═╡ 8c93644c-4441-4c41-a8e3-5b9b19bf3f39
+benchmarks_mul_loop = benchmark_my_function(mul_loop, x_list, y_list);
+
+# ╔═╡ 930a527f-9eef-43bf-970d-3a17285a233c
+if my_function_2_args_is_good_to_go
+	benchmarks_2 = benchmark_my_function(my_function_2_args, x_list, y_list)
+end
+
+# ╔═╡ 5d9ae4cb-1285-49e8-b4a9-59177f47c647
+if my_function_2_arg_inplace_is_good_to_go
+	benchmarks_2_inplace = benchmark_my_function(my_function_2_args, x_list, y_list)
+end
+
+# ╔═╡ 06d83c43-8c4e-4768-b29f-aae27776391c
+begin
+"""
+	   `benchmark_my_funciton_inplace(f,out_list)`
+	   `benchmark_my_funciton_inplace(f,out_list,x_list)`
+	   `benchmark_my_funciton_inplace(f,out_list,x_list, y_list)`
+	
+	Benchmarks the in-place version of a user-proved function.  
+	User-provided function should take an output array, followed by zero, one or two input arrays, all of the same size.
+	Returns NamedTuple with two lists (num_list, times_list) containing the number of samples and the runtime.
+"""
+	function benchmark_my_function_inplace end
+	
+	function benchmark_my_function_inplace(f::Function, num_list::Vector{I}; T::Type=Float64 ) where { I<:Int }
+		times_list = zeros(length(num_list))
+		for (i,n) in enumerate(num_list)
+			out_tmp = Array{T}(undef,num_list[i])
+			times_list[i] = @belapsed $f($out_tmp)
+		end
+		return (;num_list, times_list)
+	end
+	
+	function benchmark_my_function_inplace(f::Function, x_list::Vector{A} ) where {  A<:AbstractArray } 
+		times_list = zeros(length(x_list))
+		for (i,x) in enumerate(x_list)
+			out_tmp = Array{eltype(x)}(undef,length(x))
+			@assert length(out_tmp) <= length(x) 
+			times_list[i] = @belapsed $f($out_tmp, $x)
+		end
+		return (;num_list=length.(x_list), times_list)
+	end
+	
+	function benchmark_my_function_inplace(f::Function, x_list::Vector{A}, y_list::Vector{A} ) where {A<:AbstractArray } 
+		@assert length(x_list) == length(y_list)
+		times_list = zeros(length(x_list))
+		for i in 1:length(x_list)
+			out_tmp = Array{promote_type(eltype(x_list[i]),eltype(y_list[i]))}(undef,length(x_list[i]))
+			x = x_list[i]
+			y = y_list[i]
+			@assert length(out_tmp) <= length(x) == length(y) 
+			times_list[i] = @belapsed $f($out_tmp,$x,$y)
+		end
+		return (;num_list=length.(x_list), times_list)
+	end
+end
+
+# ╔═╡ 404a0c3a-87bf-4ff2-97a6-9f6caa5723b0
+benchmarks_0_inplace = benchmark_my_function_inplace(my_function_0_args!, num_list);
+
+# ╔═╡ 17c29c66-91f8-45e2-b1f2-337dd51a6e03
+begin
+		plt0 = scatter(benchmarks_0.num_list, log10.(benchmarks_0.num_list./benchmarks_0.times_list), xscale=:log10, label="Standard")
+		scatter!(plt0, benchmarks_0_inplace.num_list, log10.(benchmarks_0_inplace.num_list./benchmarks_0_inplace.times_list), xscale=:log10, label="In place")
+		xlabel!(plt0, "Size of Array")
+		ylabel!(plt0, "log_10 (Evals/s)")
+		title!(plt0,"Benchmarks for my_function_0_args")
+		plt0
+end
+
+# ╔═╡ fdb36917-2c79-4939-bcbd-d87ecb1e86eb
+benchmarks_sqrt_inplace = benchmark_my_function_inplace(sqrt_inplace, x_list)
+
+# ╔═╡ e761de60-60b5-4266-93bf-38c97460acb5
+if my_function_1_arg_inplace_is_good_to_go
+	benchmarks_1_inplace = benchmark_my_function_inplace(my_function_1_arg!, x_list)
+end;
+
+# ╔═╡ be67e77f-f9bc-42d5-acc7-551a9e9c2c3a
+begin
+	plt1_myf = plot()
+	scatter!(plt1_myf,benchmarks_sqrt.num_list, log10.(benchmarks_sqrt.num_list./benchmarks_sqrt.times_list), xscale=:log10, label="sqrt", legend=:topleft)
+	scatter!(plt1_myf,benchmarks_sqrt_inplace.num_list, log10.(benchmarks_sqrt_inplace.num_list./benchmarks_sqrt_inplace.times_list), xscale=:log10, label="sqrt (in-place)", legend=:topleft)
+	if my_function_1_arg_is_good_to_go
+		scatter!(plt1_myf,benchmarks_1.num_list, log10.(benchmarks_1.num_list./benchmarks_1.times_list), label="my_function_1_args")
+	end
+	if my_function_1_arg_inplace_is_good_to_go && !all(my_function_1_arg!(zeros(length(x_list[4])),x_list[4]) .== zeros(length(x_list[4])))
+		scatter!(plt1_myf,benchmarks_1_inplace.num_list, log10.(benchmarks_1_inplace.num_list./benchmarks_1_inplace.times_list), label="my_function_1_args!")
+	end
+	xlabel!(plt1_myf, "Size of Array")
+	ylabel!(plt1_myf, "log₁₀(Evals/s)")
+	title!(plt1_myf,"Benchmarks for univariate functions")
+	if my_function_1_arg_is_good_to_go
+		plt1_myf
+	end
+end
+
+# ╔═╡ 78536749-80bd-43d8-ae5d-2652f9b57669
+benchmarks_mul_loop_inplace = benchmark_my_function_inplace(mul_loop!, x_list, y_list);
+
+# ╔═╡ e174eaa7-152a-4ffe-86e1-d9281fa68def
+begin
+		plt_mul_comp = plot()
+		scatter!(plt_mul_comp,benchmarks_mul.num_list, log10.(benchmarks_mul.num_list./benchmarks_mul.times_list), label="multiply Float64s (broadcasted)")
+		scatter!(plt_mul_comp,benchmarks_mul_loop.num_list, log10.(benchmarks_mul_loop.num_list./benchmarks_mul_loop.times_list), xscale=:log10, label="multiply Float64s (loop)", legend=:topleft)
+		scatter!(plt_mul_comp,benchmarks_mul_loop_inplace.num_list, log10.(benchmarks_mul_loop_inplace.num_list./benchmarks_mul_loop_inplace.times_list), label="multiply Float64s (loop, in-place)")
+		xlabel!(plt_mul_comp, "Size of Array")
+		ylabel!(plt_mul_comp, "log_10 (Runtime/s)")
+		title!(plt_mul_comp,"Benchmarks for element-wise multiplication")
+		plt_mul_comp
+end;
+
+# ╔═╡ 2741fd1e-e650-4411-ac4f-9ccb855608c4
+protip(md"There is a more verbose way of writing `x.*y`.  
+```julia
+function mul_loop(x::Array, y::Array)
+	@assert size(x) == size(y)  
+	@assert eltype(x) == eltype(y)
+	z = Array{eltype(x)}(undef,size(x))
+	for i in eachindex(x,y) 
+		z[i] = x[i] * y[i]
+	end
+	z
+end
+```
+This allows us to be a little more careful.  We enforce that the arguements must be arrays of the same size and that the type of the data contained in the two input arrays matches.  We also write out a loop over all elements of the arrays explicitly.  In some languages, this can result in very poor performance.  In Julia, it's still very fast, allowing you to write functions however is easiest for you.  For a 1-d array, we might have written `for i in 1:length(x)`.  Instead, we've used `eachindex` to make the function *generic* in the sense that it can work with arrays of arbitrary dimensions, not just 1-d arrays (i.e., vectors).  Compare the performance of a few versions of the function below. $plt_mul_comp")
+
+# ╔═╡ 25c22a6d-81aa-4ffb-b330-bd01147cf28e
+benchmarks_add_loop_inplace = benchmark_my_function_inplace(add_loop!, x_list, y_list);
+
+# ╔═╡ 68314793-0705-4c38-beb3-507f801eebe9
+benchmarks_div_loop_inplace = benchmark_my_function_inplace(div_loop!, x_list, y_list);
+
+# ╔═╡ 1be00fce-45a5-434d-a5b6-8a4635fa6c13
+begin
+		plt_mul_div_comp = plot(  xscale=:log10, )
+		#scatter!(plt_mul_div_comp,benchmarks_mul.num_list, log10.(benchmarks_mul.num_list./benchmarks_mul.times_list), label="multiply Float64s (broadcasted)")
+		#scatter!(plt_mul_div_comp,benchmarks_div.num_list, log10.(benchmarks_div.num_list./benchmarks_div.times_list), label="divide Float64s (broadcasted)", legend=:topleft)
+		scatter!(plt_mul_div_comp,benchmarks_add_loop_inplace.num_list, log10.(benchmarks_add_loop_inplace.num_list./benchmarks_add_loop_inplace.times_list), label="add Float64s (loop, in-place)")
+		scatter!(plt_mul_div_comp,benchmarks_mul_loop_inplace.num_list, log10.(benchmarks_mul_loop_inplace.num_list./benchmarks_mul_loop_inplace.times_list), label="multiply Float64s (loop, in-place)")
+		scatter!(plt_mul_div_comp,benchmarks_div_loop_inplace.num_list, log10.(benchmarks_div_loop_inplace.num_list./benchmarks_div_loop_inplace.times_list), label="divide Float64s (loop, in-place)")
+
+		xlabel!(plt_mul_div_comp, "Size of Array")
+		ylabel!(plt_mul_div_comp, "log_10 (Runtime/s)")
+		title!(plt_mul_div_comp,"Benchmarks for element-wise arithmetic")
+		plt_mul_div_comp
+end
+
+# ╔═╡ d73bc561-1063-4020-bba8-d89464d31254
+begin
+		plt2 = plot()
+		scatter!(plt2,benchmarks_add_loop_inplace.num_list, log10.(benchmarks_add_loop_inplace.num_list./benchmarks_add_loop_inplace.times_list), xscale=:log10, label="add Float64s (in-place)", legend=:topleft)
+		scatter!(plt2,benchmarks_mul_loop_inplace.num_list, log10.(benchmarks_mul_loop_inplace.num_list./benchmarks_mul_loop_inplace.times_list), label="multiply Float64s (in-place)")
+		scatter!(plt2,benchmarks_div_loop_inplace.num_list, log10.(benchmarks_div_loop_inplace.num_list./benchmarks_div_loop_inplace.times_list), label="divide Float64s (in-place)")
+		if my_function_2_args_is_good_to_go
+			scatter!(plt2,benchmarks_2.num_list, log10.(benchmarks_2.num_list./benchmarks_2.times_list), label="my_function_2_args!")
+		end
+
+		xlabel!(plt2, "Size of Array")
+		ylabel!(plt2, "log_10 (Runtime/s)")
+		title!(plt2,"Benchmarks for functions of 2 variables")
+		plt2
+end
+
+# ╔═╡ e7ed71e1-9fdf-423e-b2fb-a5b79632fb3d
+md"""
+#### Bonus material
+(Removed from lab due to time constraints)
+"""
+
+# ╔═╡ 92aa5583-6db2-4985-b2f1-9b5e076d05ff
+begin
+	show_fixed_size_array_results = false
+	#using FixedSizeArrays
+end;
+
+# ╔═╡ b974e7f2-e72d-4732-8b1c-b85e1ad99463
+if show_fixed_size_array_results
+	x_list_fixedsize = FixedSizeArray.(x_list)
+	y_list_fixedsize = FixedSizeArray.(y_list)
+end
+
+# ╔═╡ f32cfd9a-2e2c-4da3-9d05-ceaa3814a502
+if show_fixed_size_array_results
+	benchmarks_sqrt_fixedsize = benchmark_my_function(sqrt_broadcasted, x_list_fixedsize)
+	benchmarks_sqrt_inplace_fixesize = benchmark_my_function_inplace(sqrt_inplace, x_list_fixedsize)
+end;
+
+# ╔═╡ 79716270-4570-41cb-9746-394eead121ee
+begin
+	plt1 = plot()
+	scatter!(plt1,benchmarks_sqrt.num_list, log10.(benchmarks_sqrt.num_list./benchmarks_sqrt.times_list), xscale=:log10, label="sqrt", legend=:topleft)
+	scatter!(plt1,benchmarks_sqrt_inplace.num_list, log10.(benchmarks_sqrt_inplace.num_list./benchmarks_sqrt_inplace.times_list), xscale=:log10, label="sqrt (in-place)", legend=:topleft)
+	if show_fixed_size_array_results
+		scatter!(plt1,benchmarks_sqrt_fixedsize.num_list, log10.(benchmarks_sqrt_fixedsize.num_list./benchmarks_sqrt_fixedsize.times_list), xscale=:log10, label="sqrt (fixed-size)", legend=:topleft)
+		scatter!(plt1,benchmarks_sqrt_inplace_fixesize.num_list, log10.(benchmarks_sqrt_inplace_fixesize.num_list./benchmarks_sqrt_inplace_fixesize.times_list), xscale=:log10, label="sqrt (in-place & fixed size)", legend=:topleft)
+	end
+	
+	xlabel!(plt1, "Size of Array")
+	ylabel!(plt1, "log₁₀(Evals/s)")
+	title!(plt1,"Benchmarks for univariate functions")
+	plt1
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-CpuId = "adafc99b-e345-5852-983c-f28acb93d879"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
@@ -375,7 +639,6 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 BenchmarkTools = "~1.6.0"
-CpuId = "~0.3.1"
 LaTeXStrings = "~1.4.0"
 Plots = "~1.40.19"
 PlutoTeachingTools = "~0.4.5"
@@ -389,7 +652,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "bdd0bded66999a2322c400a6d15d2622d2d9f09c"
+project_hash = "b5cac56bbd8a1a78484308eb94077af919bfec02"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -503,12 +766,6 @@ version = "2.5.0"
 git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.6.3"
-
-[[deps.CpuId]]
-deps = ["Markdown"]
-git-tree-sha1 = "fcbb72b032692610bfbdb15018ac16a36cf2e406"
-uuid = "adafc99b-e345-5852-983c-f28acb93d879"
-version = "0.3.1"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
@@ -1549,78 +1806,95 @@ version = "1.9.2+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─c6ca6335-09bc-45e6-96bb-b7ca91e57917
-# ╟─c888afb4-59da-4d7b-a050-df84f3735202
-# ╟─b9157cf9-99da-46ee-8ba0-ed6a95153f74
-# ╟─11c54089-54c9-40a6-8a31-24319694dbb3
-# ╠═b0873452-b9b5-4bc5-bb76-5f299a6d366e
-# ╟─cc584d2a-2a3b-4898-b753-1a7275712ad2
-# ╟─e69c7809-ec6c-4f3a-b869-100381d40bf9
-# ╟─83befcf5-0b81-47ce-9157-fb6493084c3c
-# ╟─02f28198-d780-48a5-b4e9-74bdecb4e83a
-# ╟─ea68d6eb-a542-44bf-b0e7-815e2372bc33
-# ╠═484b47d6-65de-497a-b78f-6996c8787de8
-# ╟─8e2045c2-c5de-4895-9719-efb9de113dec
-# ╟─2da17c61-a8d7-4dc2-8209-69fe809e9d4f
-# ╟─4e8e86ed-92b0-4aa5-945b-ef6193cb2559
-# ╠═1d4275fd-3208-477d-b26e-be23940035ba
-# ╟─c64bd8d8-6801-46a7-876b-c75b83300416
-# ╟─5cc54a66-461c-4bb3-8e29-2079adeff04f
-# ╠═30efc3ea-a2a2-48f8-833f-6b51845e47dc
-# ╟─33bc47b6-f48b-4e24-bb54-fa794f04e166
-# ╟─3fab2e27-766c-4464-9b6c-e5235a80183a
-# ╟─9af89fd2-a5f6-4807-beb6-d3fa9fa89b69
-# ╠═7e42beb2-f525-40c4-9332-5c0b4bd27e9c
-# ╟─4d3b7121-8409-492f-8de5-7cc7859f193f
-# ╟─a847804b-886e-4046-a7b8-52f3fbfc9376
-# ╟─702843dc-83a9-4fde-b7fa-989e1e5e6c88
-# ╠═59e0467c-a8a8-43fe-a735-146e001a14fb
-# ╟─64c04240-24a4-4d1e-b03d-3ca8dd1fdd38
-# ╟─607ebb54-065f-44e9-a66c-686dae2dcd54
-# ╠═dc2116e4-5995-4b81-8d19-3656da4c34dc
-# ╟─5dc61f62-57f0-4c1e-9373-d6d00931d12d
-# ╟─62dd7c5b-21a3-4c53-99a7-b6f7e57e39f2
-# ╟─261c65e6-c93e-4253-b828-a92ef90ed797
-# ╠═9a8c7c33-0e71-42fa-b2a3-e6bbd17c2b81
-# ╠═ca8ca136-d01a-4909-90df-331b82f1b8f5
-# ╠═23f7567b-3493-407e-a251-58d5dbecaed1
-# ╟─30cc4863-e53a-45b9-9673-689a236e59f6
-# ╠═1d3f387e-caed-4b60-a74a-8576875b9270
+# ╟─4ac5cc73-d8d6-43d5-81b2-944d559fd2ca
+# ╠═637f6a84-ad01-43a7-899b-b7867fbe3b3d
 # ╟─c23045a0-56b2-4e1e-b5d3-8e248fd1bffd
-# ╟─afeda1b5-75ae-4c82-a5eb-d6853083ce14
-# ╠═06da82e6-256e-4a46-b8d5-090e6595940c
-# ╟─324e7a1d-cb0b-4c01-893f-672ecffcd2fa
+# ╠═6dcedd62-c606-43ba-b2f6-e018aefcb035
 # ╟─e3bfd6bc-261d-4e69-9ce6-e78d959c13be
 # ╠═0854551f-fc6d-4c51-bf85-a9c7030e588b
-# ╟─5330262e-74a1-4c0e-8ba9-c458deeb8f6a
-# ╟─26921972-788f-412d-856d-3edd6c2c93b1
-# ╠═ef6e093f-613a-47ed-bcb1-f593f41cf73a
-# ╟─f43b83a3-2560-4036-b6f4-20cc3860efb0
-# ╟─d985b122-1ea7-4dc7-b724-45eb77bcf146
-# ╟─03a78cda-38ba-4c74-b777-1a51dacc223c
-# ╟─e86ed6db-6e4a-4652-9e1b-7a6a5c168927
-# ╟─a8fe454d-34c4-4619-ace4-610975a8df5f
-# ╟─50902545-34bb-4e77-88b7-afc4dac439ec
-# ╟─7c98f340-2719-4230-a7ae-e69db51e66cb
-# ╟─616fabd6-0ea7-4524-a6a1-c4c60d4f87d0
-# ╠═cdfbad83-736b-44ac-a792-3bbc37fb1076
-# ╟─84539bf8-d5e4-4f75-b5fb-1197ca6221f2
-# ╠═fb07fab4-89e4-4e59-bfb5-2e3fd5e26f37
-# ╟─3715f7c6-48c7-4706-a7b7-1757c2891240
-# ╟─20cd5f33-d865-470a-9ef4-0cd18a5bba00
-# ╠═ac0374ce-9a02-4fdb-a1e9-5e6fac9192c2
-# ╟─ba2c71eb-ff66-43a1-8056-982ccfb41510
-# ╟─9ad38265-3d12-4df5-b251-bf7f19fe8947
-# ╠═c06d4df7-b8ff-493e-b933-eee61baaf651
-# ╟─732cf450-0330-43fa-aa0b-6c0fb1b02fd7
-# ╟─19617de2-d198-43d6-a3da-71b7cdfc0be1
-# ╟─7c0a4bda-cd4b-4bef-a2f6-84efe76670aa
-# ╟─ec7d8268-7f97-4ba3-a0ab-717506002fb6
-# ╟─fb3f1372-a7fc-4698-a8ce-d96354520a63
+# ╟─f320d2bf-7bd5-4374-95af-17d787c516b4
+# ╟─2a5eb6c7-9b8c-4923-8fe4-e7211c6c820f
+# ╟─aa8367f9-33f4-490e-851b-5f02f15db48d
+# ╠═b3e64508-319f-4506-8512-211e30be4bee
+# ╟─a0a24490-3136-45e4-8f55-44448d8366d1
+# ╠═69c39140-ba66-4345-869c-a5499d5d4376
+# ╟─2e0b53c8-4107-485f-9f33-d921b6fc0c05
+# ╠═6b2d4a5c-80bc-4620-9e8a-d8684302a9f2
+# ╟─17c29c66-91f8-45e2-b1f2-337dd51a6e03
+# ╟─13f684b2-b90d-4696-8f0f-ea7b3d223e07
+# ╠═6e8ea4cd-3cc1-42af-b243-ac6b837b6361
+# ╟─1fe91b8a-c8d6-45ec-a4c4-337107630616
+# ╠═404a0c3a-87bf-4ff2-97a6-9f6caa5723b0
+# ╟─6753c21c-e441-401e-b519-76a6ddf8b4ea
+# ╟─928fe18c-2b34-427f-afdb-6273a0ce135e
+# ╠═fd7c88ef-02fb-408f-a551-45a93d873ded
+# ╟─ba4b35c8-0fe8-4a25-9817-d13c0cd98c6f
+# ╠═bb4e3e7e-d8da-4c53-b861-0e66237aae3c
+# ╠═4e1f8fa4-b846-4cbd-a5de-b9e137ec04f9
+# ╟─79716270-4570-41cb-9746-394eead121ee
+# ╠═ae86274b-4e35-4584-9b9d-f4970abbfccd
+# ╠═fdb36917-2c79-4939-bcbd-d87ecb1e86eb
+# ╟─6e1e699f-4f4a-4a21-946f-e763eb106f37
+# ╠═39ed7918-8926-4866-8b25-c61dbbd35991
+# ╟─a403c0f3-fc4a-4bc1-87c4-8a2d5d15e1a0
+# ╟─185fac9d-ea9e-460a-8f90-d5dad528ed4b
+# ╟─be67e77f-f9bc-42d5-acc7-551a9e9c2c3a
+# ╟─81731b59-a87d-4cfc-ac99-9cd35dfe3881
+# ╠═674319bf-ca94-43ec-8dad-f8e452459c25
+# ╟─75fc22e9-8f8b-42a1-af77-d10f12255105
+# ╟─3115fb89-6fb5-451f-9f63-47c5c9693260
+# ╠═52ba1f4c-83e0-487d-be52-b60c0964d3ae
+# ╟─e761de60-60b5-4266-93bf-38c97460acb5
+# ╟─1116a9e0-64a4-4ae2-a0d8-d52fcbe2a275
+# ╟─24e6bf47-d527-48d2-a9bb-7879ce3f9a95
+# ╟─5d234d6c-be3d-4d0f-bd58-774b6786db54
+# ╠═11df2b04-2bef-497e-a064-cbcd159aecc7
+# ╠═d5322db3-501f-467f-a3f4-297258bc2570
+# ╠═8320739f-ec14-4a49-b374-a0baa198f646
+# ╠═fffd69c6-47d6-411c-ba57-9c52e659f598
+# ╠═e352d85a-b8ce-4355-8b0b-9c28465dd006
+# ╠═4a45fa07-f4dd-4a76-8bd1-8627060a6fc5
+# ╟─b8bb2267-83bc-4e5e-a2b0-fe346cce1a33
+# ╟─2741fd1e-e650-4411-ac4f-9ccb855608c4
+# ╟─eebad38f-795d-4e27-8e22-b877d4746a6d
+# ╟─3cc0a54f-bfb9-4d68-971a-c9fe2a7ba705
+# ╟─8c93644c-4441-4c41-a8e3-5b9b19bf3f39
+# ╟─60f1ac1a-c547-4339-8e8e-708b5072c46a
+# ╟─78536749-80bd-43d8-ae5d-2652f9b57669
+# ╟─e174eaa7-152a-4ffe-86e1-d9281fa68def
+# ╟─a32c730d-64eb-4e06-81c9-bc8b888280b4
+# ╟─c314f7bd-fdfd-4efe-93ef-c70a334ffe10
+# ╟─25c22a6d-81aa-4ffb-b330-bd01147cf28e
+# ╟─f128512e-2740-4d70-a8f7-358b493fa527
+# ╟─68314793-0705-4c38-beb3-507f801eebe9
+# ╟─1be00fce-45a5-434d-a5b6-8a4635fa6c13
+# ╟─0ce6409c-3aa4-4446-ae13-81c4e743d322
+# ╠═f13619d1-6ece-42be-965d-ab6bb9e9b8cd
+# ╟─340808ea-e99b-4de7-ad55-b2d812ff0f4d
+# ╟─930a527f-9eef-43bf-970d-3a17285a233c
+# ╠═4e36a5ed-ad2b-4f7c-9ad9-ecb4b3e312c5
+# ╟─21580c47-2b8a-4215-826f-d25b053713ed
+# ╟─5d9ae4cb-1285-49e8-b4a9-59177f47c647
+# ╟─e3a5b2fe-0520-4afb-a23c-94d7c06b4026
+# ╟─3621793a-427b-40d2-b28d-7bb9c6f3a28c
+# ╟─d73bc561-1063-4020-bba8-d89464d31254
+# ╟─10499798-1ba6-4a2f-827b-aecc4a1f8346
+# ╠═ffde1960-8792-4092-9a0b-42b2726bb2da
+# ╟─10f54651-4b05-4806-9a0c-cb0b6afa245b
+# ╟─2291567f-71a4-4a53-a80c-aab58f29ddf8
+# ╠═05e772d4-a2ad-4f16-866c-b8aa3ab7a550
+# ╟─eb1ff48b-7dbc-4b37-a18d-77eadc568f5a
 # ╟─07653065-2ef3-4a63-a25b-1b308c22aff5
 # ╠═a1122848-347f-408b-99c2-a7a514073864
 # ╠═62cf3b41-2a34-4ec9-b8bc-206419856a28
 # ╠═ea0a7ca2-503f-4d61-a3d4-42503f322782
+# ╠═a4ec3c8d-4335-4ddd-a75b-57b638b9426b
 # ╠═b5103197-8961-4fc0-99c9-50fee4e15a1c
+# ╠═9b2cdb77-9330-4a8b-84b5-deed94c19662
+# ╠═06d83c43-8c4e-4768-b29f-aae27776391c
+# ╟─e7ed71e1-9fdf-423e-b2fb-a5b79632fb3d
+# ╠═92aa5583-6db2-4985-b2f1-9b5e076d05ff
+# ╠═b974e7f2-e72d-4732-8b1c-b85e1ad99463
+# ╠═f32cfd9a-2e2c-4da3-9d05-ceaa3814a502
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -7,8 +7,8 @@ using Test
 end;
 
 @testset "Testing that variables exist" begin
-   @test @isdefined(response_1a)
-   @test @isdefined(response_1b)
+   #@test @isdefined(response_1a)
+   #@test @isdefined(response_1b)
    @test @isdefined(response_1c)
    @test @isdefined(response_1d)
    @test @isdefined(response_1e)
@@ -26,8 +26,8 @@ end;
 end;
 
 @testset "Testing that variables are not missing" begin
-   @test !ismissing(response_1a)
-   @test !ismissing(response_1b)
+   #@test !ismissing(response_1a)
+   #@test !ismissing(response_1b)
    @test !ismissing(response_1c)
    @test !ismissing(response_1d)
    @test !ismissing(response_1e)
@@ -50,12 +50,13 @@ end;
 end
 
 @testset "Testing numerical answers" begin
-   maxN_4gb = floor(Int,sqrt(4*2^30/8))
-	@test response_1c == maxN_4gb
+   maxN_8gb = floor(Int,sqrt(4*2^30/8))
+	@test response_1c == maxN_8gb
 	maxN_1tb = floor(Int,sqrt(1024*2^30/8))
    @test response_1f == maxN_1tb
-	my_flops = 1.5e9
-	my_est_1d = (2//3)*maxN_4gb^3 / my_flops
+        my_cpu_speed =  has_cpu_frequencies() ? cpu_base_frequency()*1e6 : 1e9
+        my_flops = 1 * my_cpu_speed  # Ball-park assumption, depends on CPU architecture
+	my_est_1d = (2//3)*maxN_8gb^3 / my_flops
 	@test my_est_1d/10 <= response_1d <= 10*my_est_1d
 	my_est_1g = (2//3)*maxN_1tb^3 / my_flops
 	@test my_est_1g/10 <= response_1g <= 10*my_est_1g

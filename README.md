@@ -6,10 +6,9 @@ The previous lab contained detailed instructions for using the Pluto notebook se
 Remember, that you need follow the provided link to create your own private copy of this lab's repository on GitHub.com.   See the
 [help on the course website](https://psuastro528.github.io/Fall2025/tips) for instructions on getting setup to use Lynx, cloning, commiting, pushing and submiting your work
 
-## Exercise 1:  Benchmarking Code, Big-O notation, Compute vs Memory Limits
-- Goal 1: Benchmark functions accurately
-- Goal 2: Predict cost of an algorithm based on Big-O notation
-- Goal 3: Identify real world complications that affect scaling
+## Exercise 1:  Computational Costs of Linear Algebra
+- Goal 1: Predict cost of an algorithm based on Big-O notation
+- Goal 2: Identify real world complications that affect scaling
 
 From your Pluto notebook server, work through ex1.jl.
 
@@ -26,3 +25,11 @@ From your Pluto notebook server, work through ex2.jl.
 - Goal 3:  Recognize importance of numerical stability
 
 From your Pluto notebook server, work through ex3.jl.
+
+## Exercise 4:  Benchmarking Arithmetic
+- Goal 1:  Benchmark numerical functions accurately
+- Goal 2:  Compare cost of common numerical functions 
+
+From your Pluto notebook server, work through ex4.jl.
+
+

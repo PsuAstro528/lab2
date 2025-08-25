@@ -19,3 +19,8 @@ Pluto.activate_notebook_environment("ex3.jl")
 Pkg.status()
 Pkg.instantiate()
 #Pkg.build()
+Pluto.activate_notebook_environment("ex4.jl")
+Pkg.status()
+Pkg.instantiate()
+#Pkg.build()
+

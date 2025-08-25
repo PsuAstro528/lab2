@@ -11,6 +11,14 @@ println("Installing packages for ex2.jl")
 Pluto.activate_notebook_environment("../ex2.jl"); 
 Pkg.instantiate(); 
 
+println("Installing packages for ex4.jl")
+Pluto.activate_notebook_environment("../ex4.jl"); 
+Pkg.instantiate(); 
+
+println("Installing packages for ex3.jl")
+Pluto.activate_notebook_environment("../ex3.jl"); 
+Pkg.instantiate(); 
+
 println("Preventing generating html for ex3 everytime.")
 println(basename(pwd()))
 if !occursin(r"lab2$",pwd())

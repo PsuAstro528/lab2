@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -28,7 +28,7 @@ where $e$ is the orbital eccentricity.  The mean anomaly increases linearly with
 """
 
 # ╔═╡ 8116b382-c927-4563-8fde-dc034dd96ab9
-md"2a.  Update the function `calc_mean_anom` below to compute the mean anomaly for a given eccentric anomaly and eccentricity."
+md"**Q2a:**  Update the function `calc_mean_anom` below to compute the mean anomaly for a given eccentric anomaly and eccentricity."
 
 # ╔═╡ c9eef6f8-4583-429b-a3ae-09f1ec8e5ecf
 """   `calc_mean_anom(ecc_anom, e)`
@@ -129,7 +129,7 @@ Sometimes a programmer calls a function with arguments that either don't make se
 
 For example, in `ecc_anom_init_guess_danby` above, we included an assertion that the eccentricity was positive-semidefinite and less than or equal to unity.  
 
-2b. What other preconditions should be met for the inputs to the functions above?    What is about `calc_mean_anom` from 2a?
+**Q2b:** What other preconditions should be met for the inputs to the functions above?    What is about `calc_mean_anom` from 2a?
 """
 
 # ╔═╡ 693371c4-8e35-4a8e-9fa2-8c0e441515ac
@@ -145,7 +145,7 @@ else
 end
 
 # ╔═╡ a3e0ad59-288a-423d-a7e9-ecadb055e0dc
-md"2c. Update the code above to include at least one additional assertion."
+md"**Q2c:** Update the code above to include at least one additional assertion."
 
 # ╔═╡ e50297d5-8599-48dd-935e-0c3975e4e379
 begin
@@ -155,7 +155,7 @@ begin
 end
 
 # ╔═╡ c0a54587-86bf-4f6d-9e5c-574badc06865
-md"2d.  Adding assertions creates extra work.  It's good to think about whether an assertion will result in a significant performance hit.  Benchmark your code before an after adding the assertions.  How does the typical run time compare?  What are the implications for whether it makes sense to leaves the assertions in a production code?"
+md"**Q2d:**  Adding assertions creates extra work.  It's good to think about whether an assertion will result in a significant performance hit.  Benchmark your code before an after adding the assertions.  How does the typical run time compare?  What are the implications for whether it makes sense to leaves the assertions in a production code?"
 
 # ╔═╡ 61db6108-8be6-4544-b1be-6e448d99748f
 @benchmark calc_ecc_anom.($mean_anoms_for_benchmarks,$eccs_for_benchmarks)
@@ -194,7 +194,7 @@ Note that testing equality or inequality is straightforward for integers, but da
 
 # ╔═╡ b17e6d66-9a19-48a8-a6ba-c8d5145387f3
 md"""
-2e. What other unit tests could be useful for diagnosing any errors or non-robust behavior?  Write at least three new unit tests that help to check whether the above code is accurate.  After writing your first one, try to think of how to make the next ones more useful than just doing very similar tests over and over again.
+**Q2e:** What other unit tests could be useful for diagnosing any errors or non-robust behavior?  Write at least three new unit tests that help to check whether the above code is accurate.  After writing your first one, try to think of how to make the next ones more useful than just doing very similar tests over and over again.
 Try think of a corner case where a non-robust algorithm might not be accurate.  
 Explain your testing plan below.
 """
@@ -225,7 +225,7 @@ In this case, the assertions are probably pretty simple.  But sometimes, the ass
 @test_throws AssertionError calc_ecc_anom(rand()*2π,-0.5) 
 
 # ╔═╡ 94891c38-8e36-43f5-b0a6-9b8b38145ef9
-md"""2f. Add tests to make sure that the assertions you added in 1c trigger as you intended them to."""
+md"""**Q2f:** Add tests to make sure that the assertions you added in 1c trigger as you intended them to."""
 
 
 # ╔═╡ a9af0fa1-99af-447d-86ad-cb926f7b9de1
@@ -236,9 +236,9 @@ md"""
 ## Continous Integration Testing.
 Often, a well-intentioned programmer introduces a bug, but doesn't notice until long after the bug was written.  One way to reduce the risk of such bugs is to have an comprehensive set of unit tests that are applied _automatically_ each time a developer commits a change.  If some new code causes a test to fail, we want to know that promptly, so it can be fixed and before it causes scientists to lose time running the buggy code or trying to interpret results of a buggy code.
 
-The '.github/workflows/test.yaml' file provided in this repository already provides instructions for GitHub.com to automatically run tests each time you commit changes and push them to GitHub.  The tests for this notebook are in `tests/test3.jl`.  
+The '.github/workflows/test.yaml' file provided in this repository already provides instructions for GitHub.com to automatically run tests each time you commit changes and push them to GitHub.  The tests for this notebook are in `tests/test2.jl`.  
 
-2g.  Add the tests that you wrote above to `tests/test2.jl`, so that they become part of your repository's _continuous integration_ testing.  Commit those changes to your local repository and push them to github.  Go to your repository on GitHub, click "Actions", then click "Test notebooks", then look at the line for most recent commit (at the top of the list).  Is there a green check or a red x?  If a red x, then click on the commit message for the most recent commit, and then click "test (v1.9, x86, ubuntu-latest)" to see the messages associated with that test run.  See if you can figure out why a test failed.  
+2g.  Add the tests that you wrote above to `tests/test2.jl`, so that they become part of your repository's _continuous integration_ testing.  Commit those changes to your local repository and push them to github.  Go to your repository on GitHub, click "Actions", then click "Test notebooks", then look at the line for most recent commit (at the top of the list).  Is there a green check or a red x?  If a red x, then click on the commit message for the most recent commit, and then click "test (v1.11, x86, ubuntu-latest)" to see the messages associated with that test run.  See if you can figure out why a test failed.  
 (If this doesn't work the first time, then it's probably wise to move on to the next exercise and come back to this only if you have sufficient time."""
 
 # ╔═╡ a93f0326-78ca-407d-aec2-5de318c002ca
@@ -248,7 +248,7 @@ tip(md"If a test does fail, then it may be useful to run the tests on Lynx or yo
 md"## Setup & Helper Code"
 
 # ╔═╡ 2e893623-2d05-48ac-b7c6-0ba167dc7419
-ChooseDisplayMode()
+WidthOverDocs()
 
 # ╔═╡ bfdd8ecf-5f05-4056-a9d8-f3404774ff52
 TableOfContents()
@@ -665,8 +665,8 @@ version = "17.4.0+2"
 # ╟─2ca10bfe-549b-4910-95a3-e68a292df0d6
 # ╟─a93f0326-78ca-407d-aec2-5de318c002ca
 # ╟─b760fedd-41ea-4784-845f-ede0163c0d12
-# ╠═2e893623-2d05-48ac-b7c6-0ba167dc7419
+# ╟─2e893623-2d05-48ac-b7c6-0ba167dc7419
 # ╠═af508570-b20f-4dd3-a995-36c79fc41823
-# ╠═bfdd8ecf-5f05-4056-a9d8-f3404774ff52
+# ╟─bfdd8ecf-5f05-4056-a9d8-f3404774ff52
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
