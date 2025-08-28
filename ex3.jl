@@ -10,7 +10,7 @@ begin
 	begin 
 		using DifferentialEquations
 		using LinearAlgebra
-		using FixedSizeArrays
+		using FixedSizeArrays, StaticArrays
 		using Plots
 		using Printf
 		using LaTeXStrings
@@ -127,9 +127,11 @@ begin
 	v_init = init_velocity   .* [0, -m[2]/sum(m), 0, 0, m[1]/sum(m), 0 ]
 	# DifferentialEquations.jl wants the initial conditions as a single vector
 	u_init = vcat(r_init, v_init);   # concatenate positions & velocities
-	u_init = FixedSizeArray(u_init); # Fix array size to help compiler optimize
-	m = FixedSizeArray(m)
-	
+	u_init = MVector{2*6}(u_init); # Fix array size to help compiler optimize
+	m = MVector{2}(m)
+	# If number of bodies wasn't known at compile time, could use FixedSizeArray
+	#u_init = FixedSizeArray(u_init); 
+	#m = FixedSizeArray(m)
 end
 
 # ╔═╡ c7721744-061e-49e1-9470-0fd13bb960e9
@@ -603,7 +605,7 @@ radial separation of the planet and deviation of its phase from linear growth.
 
 """
 function make_test_plots_v1(; alg=DP8(), duration=100, steps_per_orbit=1000, 
-        maxiters=1_000_000, save_every_n_orbits=1, init_separation= 1, mass = FixedSizeArray([1.0, 0.001]), plt_title = "")
+        maxiters=1_000_000, save_every_n_orbits=1, init_separation= 1, mass = MVector{2}(1.0, 0.001), plt_title = "")
     @assert length(mass) == 2  # Phase and separation error only make sense for 1 planet
     # Setup initial conditions
     init_velocity = sqrt(sum(mass)/init_separation) # Uniform circular motion
@@ -612,7 +614,8 @@ function make_test_plots_v1(; alg=DP8(), duration=100, steps_per_orbit=1000,
     v_init = init_velocity   .* [0, -mass[2]/sum(mass), 0, 0, mass[1]/sum(mass), 0 ]
     # DifferentialEquations.jl wants the initial conditions as a single vector
     u_init = vcat(r_init, v_init);  # concatenate positions & velocities
-	u_init = FixedSizeArray(u_init)
+	#u_init = FixedSizeArray(u_init)
+	u_init = MVector{2*6}(u_init)
     @assert length(u_init) == 6 * length(mass)
     year = 2pi*sqrt(init_separation^3/sum(mass))    # Kepler's third law
     time_span = (0.0,0.01*year) 
@@ -691,15 +694,17 @@ Setup for algorithms that uses knowledge that this is a Hamiltonian system
 - `mass`: masses of bodies ([1, 0.001])            
 """
 function make_test_plots_v2(; duration=100, alg=KahanLi6(), steps_per_orbit=36, 
-        save_every_n_orbits=1, init_separation = 1, mass=FixedSizeArray([1.0,0.001]), plt_title="")
+        save_every_n_orbits=1, init_separation = 1, mass=MVector{2}(1.0,0.001), plt_title="")
     @assert length(mass) == 2  # Phase and separation error only make sense for 1 planet
     # Setup initial conditions
     init_velocity = sqrt(sum(mass)/init_separation) # Uniform circular motion
     year = 2pi*sqrt(init_separation^3/sum(mass))    # Kepler's third law
     r_init = init_separation .* [-mass[2]/sum(mass), 0, 0, mass[1]/sum(mass), 0, 0 ]
     v_init = init_velocity   .* [0, -mass[2]/sum(mass), 0, 0, mass[1]/sum(mass), 0 ]
-	r_init = FixedSizeArray(r_init)
-	v_init = FixedSizeArray(v_init)
+	#r_init = FixedSizeArray(r_init)
+	#v_init = FixedSizeArray(v_init)
+	r_init = MVector{2*3}(r_init)
+	v_init = MVector{2*3}(v_init)
     @assert length(r_init) == length(v_init) == 3 * length(mass)
     # First do a very short integration to make sure code is compiled before timing
     time_span = (0.0,0.01*year) 
@@ -850,6 +855,7 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 DifferentialEquations = "~7.16.1"
@@ -858,6 +864,7 @@ LaTeXStrings = "~1.4.0"
 Plots = "~1.40.19"
 PlutoTeachingTools = "~0.4.5"
 PlutoUI = "~0.7.52"
+StaticArrays = "~1.9.14"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -866,7 +873,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "0430a3cf837ecddbc27f78ef1d68726e86127b74"
+project_hash = "5b2e5502c69bb48fbd1ddada189323e250073208"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "60665b326b75db6517939d0e1875850bc4a54368"
