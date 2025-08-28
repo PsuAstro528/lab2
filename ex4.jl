@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.10
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
@@ -84,7 +84,7 @@ To do that, I needed to create/call an in-place version of the function that we'
 """
 
 # ╔═╡ 6e8ea4cd-3cc1-42af-b243-ac6b837b6361
-my_function_0_args!(out::AbstractArray) = rand!(out)
+my_function_0_args!(out) = rand!(out)
 
 # ╔═╡ 1fe91b8a-c8d6-45ec-a4c4-337107630616
 tip(md"In Julia, there's a convection to end function names in a '!' if they change the values of one of the function arguements.")
@@ -203,7 +203,7 @@ md"Now, let's try benchmarking some functions that take two variables."
 add_broadcasted(x, y) = x.+y;
 
 # ╔═╡ 8320739f-ec14-4a49-b374-a0baa198f646
-mul_broadcasted(x::Array, y::Array) = x.*y 
+mul_broadcasted(x, y) = x.*y 
 
 # ╔═╡ e352d85a-b8ce-4355-8b0b-9c28465dd006
 div_broadcasted(x,y) = x./y;
@@ -263,7 +263,7 @@ Now let's compare the performance of in-place versions of those functions.
 md"Create a function `my_function_2_args` that takes two arrays and applies computes a function of your choice to them."
 
 # ╔═╡ f13619d1-6ece-42be-965d-ab6bb9e9b8cd
-my_function_2_args(x::Array, y::Array) = missing  # Replace missingwith your function
+my_function_2_args(x::AbstractVector, y::AbstractVector) = missing  # Replace missing with your function
 
 # ╔═╡ 340808ea-e99b-4de7-ad55-b2d812ff0f4d
 begin
@@ -283,7 +283,9 @@ begin
 end
 
 # ╔═╡ 4e36a5ed-ad2b-4f7c-9ad9-ecb4b3e312c5
-my_function_2_args!(z::Array, x::Array, y::Array) = missing
+function my_function_2_args!(z::AbstractVector, x::AbstractVector, y::AbstractVector) 
+	missing  # Replace missing with your function body
+end
 
 # ╔═╡ 21580c47-2b8a-4215-826f-d25b053713ed
 begin
@@ -314,27 +316,49 @@ Now, it's your turn.  Try updating `my_function_1_arg` and `my_function_2_args` 
 
 # ╔═╡ 10499798-1ba6-4a2f-827b-aecc4a1f8346
 md"""
-**Q1a:**  How much longer did it take to compute a trig function than simple arithmetic?  How much longer did it take to compute a logarithm than simple arithmetic?
+**Q4a:**  How much longer did it take to compute a trig function than simple arithmetic?
 (Express your responses as ratio of run times.)
 """
 
 # ╔═╡ ffde1960-8792-4092-9a0b-42b2726bb2da
-response_1a = missing
+response_4a = missing
 
 # ╔═╡ 10f54651-4b05-4806-9a0c-cb0b6afa245b
-display_msg_if_fail(check_type_isa(:response_1a,response_1a,Markdown.MD)) 
+display_msg_if_fail(check_type_isa(:response_4a,response_4a,Markdown.MD)) 
 
-# ╔═╡ 2291567f-71a4-4a53-a80c-aab58f29ddf8
+# ╔═╡ 9ca89928-17c9-456b-9c1e-a965678125a3
 md"""
-**Q1b:**  Did the number of evaluations per second vary significantly depending on the number of elements in the array?  
-How large of an array was necessary before the performance reached its asymptote?
+**Q4b:**  How much longer did it take to compute a logarithm than simple arithmetic?
+(Express your responses as ratio of run times.)
 """
 
 # ╔═╡ 05e772d4-a2ad-4f16-866c-b8aa3ab7a550
-response_1b = missing
+response_4b = missing
 
 # ╔═╡ eb1ff48b-7dbc-4b37-a18d-77eadc568f5a
-display_msg_if_fail(check_type_isa(:response_1b,response_1b,Markdown.MD)) 
+display_msg_if_fail(check_type_isa(:response_4b,response_4b,Markdown.MD)) 
+
+# ╔═╡ 2291567f-71a4-4a53-a80c-aab58f29ddf8
+md"""
+**Q4c:**  Did the number of evaluations per second vary significantly depending on the number of elements in the array?  
+"""
+
+# ╔═╡ 3e4f3191-f391-44a7-bbdf-11df2788055d
+response_4c = missing
+
+# ╔═╡ 2ae44e62-f84e-4959-967b-5923404a094f
+display_msg_if_fail(check_type_isa(:response_4c,response_4c,Markdown.MD)) 
+
+# ╔═╡ b11596d7-0fce-4e19-b590-43f5b0f94b67
+md"""
+**Q4d:**  How large of an array was necessary before the performance reached its asymptote?
+"""
+
+# ╔═╡ 95607881-c7ed-41b5-8348-f44445e52445
+response_4d = missing
+
+# ╔═╡ 7e7edf97-bff9-4595-836e-6da11baa9169
+display_msg_if_fail(check_type_isa(:response_4d,response_4d,Markdown.MD)) 
 
 # ╔═╡ 07653065-2ef3-4a63-a25b-1b308c22aff5
 md"# Setup & Helper code"
@@ -605,11 +629,11 @@ This illustrates a few more techniques, but was removed from the lab, so you'd h
 
 # ╔═╡ 92aa5583-6db2-4985-b2f1-9b5e076d05ff
 begin
-	#using FixedSizeArrays        # Uncomment to experiment with code below
+	#using FixedSizeArrays          # Uncomment to experiment with code below
 	#using LoopVectorization        # Uncomment to experiment with code below
 	show_fixed_size_array_results   = @isdefined FixedSizeArrays
 	show_loop_vectorization_results = @isdefined LoopVectorization
-	if !show_loop_vectorization_results
+	if !show_loop_vectorization_results  # Provide backup macros to avoid errors
     	macro turbo(ex)
         	esc(ex)
     	end
@@ -654,15 +678,17 @@ end
 
 end
 
-# ╔═╡ dc5f32fd-1abd-4106-baef-010404c42a5b
+# ╔═╡ 9c55facc-ae44-4361-9d9d-35e39328d1d9
 if show_loop_vectorization_results
-	if show_fixed_size_array_results
-		benchmarks_mul_inplace_fixesize_optim = benchmark_my_function_inplace(mul_loop_optimized!, x_list_fixedsize, y_list_fixedsize)
-		benchmarks_sqrt_inplace_fixesize_optim = benchmark_my_function_inplace(sqrt_loop_optimized!, x_list_fixedsize)
-	end
 	benchmarks_mul_loop_optim = benchmark_my_function_inplace(mul_loop_optimized!, x_list, y_list)
 	benchmarks_sqrt_optim = benchmark_my_function_inplace(sqrt_loop_optimized!, x_list)
 end;
+
+# ╔═╡ dc5f32fd-1abd-4106-baef-010404c42a5b
+if show_loop_vectorization_results && show_fixed_size_array_results			
+	benchmarks_mul_inplace_fixesize_optim = benchmark_my_function_inplace(mul_loop_optimized!, x_list_fixedsize, y_list_fixedsize)
+	benchmarks_sqrt_inplace_fixesize_optim = benchmark_my_function_inplace(sqrt_loop_optimized!, x_list_fixedsize)
+end
 
 # ╔═╡ ee6afb29-912a-46cc-b04c-def7b844681d
 if show_fixed_size_array_results || show_loop_vectorization_results
@@ -709,27 +735,21 @@ end
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-FixedSizeArrays = "3821ddf9-e5b5-40d5-8e25-6813ab96b5e2"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
 PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 BenchmarkTools = "~1.6.0"
-FixedSizeArrays = "~1.2.0"
 LaTeXStrings = "~1.4.0"
-LoopVectorization = "~0.12.172"
 Plots = "~1.40.19"
 PlutoTeachingTools = "~0.4.5"
 PlutoTest = "~0.2.2"
 PlutoUI = "~0.7.52"
-StaticArrays = "~1.9.14"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -738,24 +758,13 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "f7ec8c4bf89dc2c9faa4234aecf5bac8caffe8a8"
+project_hash = "b5cac56bbd8a1a78484308eb94077af919bfec02"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
 git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.3.2"
-
-[[deps.Adapt]]
-deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "f7817e2e585aa6d924fd714df1e2a84be7896c60"
-uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.3.0"
-weakdeps = ["SparseArrays", "StaticArrays"]
-
-    [deps.Adapt.extensions]
-    AdaptSparseArraysExt = "SparseArrays"
-    AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -766,38 +775,6 @@ version = "1.1.3"
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.2"
-
-[[deps.ArrayInterface]]
-deps = ["Adapt", "LinearAlgebra"]
-git-tree-sha1 = "9606d7832795cbef89e06a550475be300364a8aa"
-uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "7.19.0"
-
-    [deps.ArrayInterface.extensions]
-    ArrayInterfaceBandedMatricesExt = "BandedMatrices"
-    ArrayInterfaceBlockBandedMatricesExt = "BlockBandedMatrices"
-    ArrayInterfaceCUDAExt = "CUDA"
-    ArrayInterfaceCUDSSExt = "CUDSS"
-    ArrayInterfaceChainRulesCoreExt = "ChainRulesCore"
-    ArrayInterfaceChainRulesExt = "ChainRules"
-    ArrayInterfaceGPUArraysCoreExt = "GPUArraysCore"
-    ArrayInterfaceReverseDiffExt = "ReverseDiff"
-    ArrayInterfaceSparseArraysExt = "SparseArrays"
-    ArrayInterfaceStaticArraysCoreExt = "StaticArraysCore"
-    ArrayInterfaceTrackerExt = "Tracker"
-
-    [deps.ArrayInterface.weakdeps]
-    BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
-    BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
-    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-    CUDSS = "45b445bb-4962-46a0-9369-b4df9d0f772e"
-    ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
-    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
-    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-    StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
-    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -818,23 +795,11 @@ git-tree-sha1 = "0691e34b3bb8be9307330f88d1a3c3f25466c24d"
 uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
 version = "0.1.9"
 
-[[deps.BitTwiddlingConvenienceFunctions]]
-deps = ["Static"]
-git-tree-sha1 = "f21cfd4950cb9f0587d5067e69405ad2acd27b87"
-uuid = "62783981-4cbd-42fc-bca8-16325de8dc4b"
-version = "0.1.6"
-
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "1b96ea4a01afe0ea4090c5c8039690672dd13f2e"
 uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.9+0"
-
-[[deps.CPUSummary]]
-deps = ["CpuId", "IfElse", "PrecompileTools", "Preferences", "Static"]
-git-tree-sha1 = "f3a21d7fc84ba618a779d1ed2fcca2e682865bab"
-uuid = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
-version = "0.2.7"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -842,22 +807,11 @@ git-tree-sha1 = "fde3bf89aead2e723284a8ff9cdf5b551ed700e8"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.18.5+0"
 
-[[deps.CloseOpenIntervals]]
-deps = ["Static", "StaticArrayInterface"]
-git-tree-sha1 = "05ba0d07cd4fd8b7a39541e31a7b0254704ea581"
-uuid = "fb6a15b2-703c-40df-9091-08a04967cfa9"
-version = "0.1.13"
-
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
 git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.7.8"
-
-[[deps.Collects]]
-git-tree-sha1 = "6c973f8071ca1f39ce0ed20840f908a44575fa5e"
-uuid = "08986516-18db-4a8b-8eaa-f5ef1828d8f1"
-version = "1.0.0"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
@@ -893,11 +847,6 @@ git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.1"
 
-[[deps.CommonWorldInvalidations]]
-git-tree-sha1 = "ae52d1c52048455e85a387fbee9be553ec2b68d0"
-uuid = "f70d9fcc-98c5-4d4a-abd7-e4cdeebd8ca8"
-version = "1.0.0"
-
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
 git-tree-sha1 = "0037835448781bb46feb39866934e243886d756a"
@@ -923,12 +872,6 @@ version = "2.5.0"
 git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.6.3"
-
-[[deps.CpuId]]
-deps = ["Markdown"]
-git-tree-sha1 = "fcbb72b032692610bfbdb15018ac16a36cf2e406"
-uuid = "adafc99b-e345-5852-983c-f28acb93d879"
-version = "0.3.1"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
@@ -1008,17 +951,6 @@ git-tree-sha1 = "05882d6995ae5c12bb5f36dd2ed3f61c98cbb172"
 uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 version = "0.8.5"
 
-[[deps.FixedSizeArrays]]
-deps = ["Collects"]
-git-tree-sha1 = "c17496e474024e0c2330b20447dc536c86930510"
-uuid = "3821ddf9-e5b5-40d5-8e25-6813ab96b5e2"
-version = "1.2.0"
-weakdeps = ["Adapt", "Random"]
-
-    [deps.FixedSizeArrays.extensions]
-    AdaptExt = "Adapt"
-    RandomExt = "Random"
-
 [[deps.Fontconfig_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Zlib_jll"]
 git-tree-sha1 = "f85dac9a96a01087df6e3a749840015a0ca3817d"
@@ -1095,12 +1027,6 @@ git-tree-sha1 = "f923f9a774fcf3f5cb761bfa43aeadd689714813"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "8.5.1+0"
 
-[[deps.HostCPUFeatures]]
-deps = ["BitTwiddlingConvenienceFunctions", "IfElse", "Libdl", "Static"]
-git-tree-sha1 = "8e070b599339d622e9a081d17230d74a5c473293"
-uuid = "3e5b6fbb-0976-4d2c-9146-d79de83f2fb0"
-version = "0.1.17"
-
 [[deps.Hyperscript]]
 deps = ["Test"]
 git-tree-sha1 = "179267cfa5e712760cd43dcae385d7ea90cc25a4"
@@ -1118,11 +1044,6 @@ deps = ["Logging", "Random"]
 git-tree-sha1 = "b6d6bfdd7ce25b0f9b2f6b3dd56b2673a66c8770"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
 version = "0.2.5"
-
-[[deps.IfElse]]
-git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
-uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
-version = "0.1.1"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
@@ -1204,12 +1125,6 @@ version = "0.16.9"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
     tectonic_jll = "d7dd28d6-a5e6-559c-9131-7eb760cdacc5"
-
-[[deps.LayoutPointers]]
-deps = ["ArrayInterface", "LinearAlgebra", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface"]
-git-tree-sha1 = "a9eaadb366f5493a5654e843864c13d8b107548c"
-uuid = "10f19ff3-798f-405d-979b-55457f8fc047"
-version = "0.1.17"
 
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
@@ -1307,21 +1222,6 @@ git-tree-sha1 = "f02b56007b064fbfddb4c9cd60161b6dd0f40df3"
 uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 version = "1.1.0"
 
-[[deps.LoopVectorization]]
-deps = ["ArrayInterface", "CPUSummary", "CloseOpenIntervals", "DocStringExtensions", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "PrecompileTools", "SIMDTypes", "SLEEFPirates", "Static", "StaticArrayInterface", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "e5afce7eaf5b5ca0d444bcb4dc4fd78c54cbbac0"
-uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.172"
-
-    [deps.LoopVectorization.extensions]
-    ForwardDiffExt = ["ChainRulesCore", "ForwardDiff"]
-    SpecialFunctionsExt = "SpecialFunctions"
-
-    [deps.LoopVectorization.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-    SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
-
 [[deps.MIMEs]]
 git-tree-sha1 = "c64d943587f7187e751162b3b84445bbbd79f691"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
@@ -1331,11 +1231,6 @@ version = "1.1.0"
 git-tree-sha1 = "1e0228a030642014fe5cfe68c2c0a818f9e3f522"
 uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.16"
-
-[[deps.ManualMemory]]
-git-tree-sha1 = "bcaef4fc7a0cfe2cba636d84cda54b5e4e4ca3cd"
-uuid = "d125e4d3-2237-4719-b19c-fa641b8a4667"
-version = "0.1.8"
 
 [[deps.Markdown]]
 deps = ["Base64"]
@@ -1381,15 +1276,6 @@ version = "1.1.3"
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
-
-[[deps.OffsetArrays]]
-git-tree-sha1 = "117432e406b5c023f665fa73dc26e79ec3630151"
-uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.17.0"
-weakdeps = ["Adapt"]
-
-    [deps.OffsetArrays.extensions]
-    OffsetArraysAdaptExt = "Adapt"
 
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1512,12 +1398,6 @@ git-tree-sha1 = "fcfec547342405c7a8529ea896f98c0ffcc4931d"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 version = "0.7.70"
 
-[[deps.PolyesterWeave]]
-deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "645bed98cd47f72f67316fd42fc47dee771aefcd"
-uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
-version = "0.2.2"
-
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
 git-tree-sha1 = "5aa36f7049a63a1528fe8f7c3f2113413ffd4e1f"
@@ -1611,17 +1491,6 @@ version = "1.3.1"
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
 
-[[deps.SIMDTypes]]
-git-tree-sha1 = "330289636fb8107c5f32088d2741e9fd7a061a5c"
-uuid = "94e857df-77ce-4151-89e5-788b33177be4"
-version = "0.1.0"
-
-[[deps.SLEEFPirates]]
-deps = ["IfElse", "Static", "VectorizationBase"]
-git-tree-sha1 = "456f610ca2fbd1c14f5fcf31c6bfadc55e7d66e0"
-uuid = "476501e8-09a2-5ece-8869-fb82de89a1fa"
-version = "0.6.43"
-
 [[deps.Scratch]]
 deps = ["Dates"]
 git-tree-sha1 = "9b81b8393e50b7d4e6d0a9f14e192294d3b7c109"
@@ -1663,42 +1532,6 @@ deps = ["Random"]
 git-tree-sha1 = "95af145932c2ed859b63329952ce8d633719f091"
 uuid = "860ef19b-820b-49d6-a774-d7a799459cd3"
 version = "1.0.3"
-
-[[deps.Static]]
-deps = ["CommonWorldInvalidations", "IfElse", "PrecompileTools"]
-git-tree-sha1 = "f737d444cb0ad07e61b3c1bef8eb91203c321eff"
-uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "1.2.0"
-
-[[deps.StaticArrayInterface]]
-deps = ["ArrayInterface", "Compat", "IfElse", "LinearAlgebra", "PrecompileTools", "Static"]
-git-tree-sha1 = "96381d50f1ce85f2663584c8e886a6ca97e60554"
-uuid = "0d7ed370-da01-4f52-bd93-41d350b8b718"
-version = "1.8.0"
-weakdeps = ["OffsetArrays", "StaticArrays"]
-
-    [deps.StaticArrayInterface.extensions]
-    StaticArrayInterfaceOffsetArraysExt = "OffsetArrays"
-    StaticArrayInterfaceStaticArraysExt = "StaticArrays"
-
-[[deps.StaticArrays]]
-deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
-git-tree-sha1 = "cbea8a6bd7bed51b1619658dec70035e07b8502f"
-uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.9.14"
-
-    [deps.StaticArrays.extensions]
-    StaticArraysChainRulesCoreExt = "ChainRulesCore"
-    StaticArraysStatisticsExt = "Statistics"
-
-    [deps.StaticArrays.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-
-[[deps.StaticArraysCore]]
-git-tree-sha1 = "192954ef1208c7019899fbf8049e717f92959682"
-uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
-version = "1.4.3"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra"]
@@ -1752,12 +1585,6 @@ deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 version = "1.11.0"
 
-[[deps.ThreadingUtilities]]
-deps = ["ManualMemory"]
-git-tree-sha1 = "d969183d3d244b6c33796b5ed01ab97328f2db85"
-uuid = "8290d209-cae3-49c0-8002-c8c24d57dab5"
-version = "0.5.5"
-
 [[deps.TranscodingStreams]]
 git-tree-sha1 = "0c45878dcfdcfa8480052b6ab162cdd138781742"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
@@ -1777,11 +1604,6 @@ version = "1.6.1"
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 version = "1.11.0"
-
-[[deps.UnPack]]
-git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
-uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
-version = "1.0.2"
 
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
@@ -1821,12 +1643,6 @@ version = "1.7.0"
 git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
 uuid = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 version = "0.2.0"
-
-[[deps.VectorizationBase]]
-deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static", "StaticArrayInterface"]
-git-tree-sha1 = "4ab62a49f1d8d9548a1c8d1a75e5f55cf196f64e"
-uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.21.71"
 
 [[deps.Vulkan_Loader_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Wayland_jll", "Xorg_libX11_jll", "Xorg_libXrandr_jll", "xkbcommon_jll"]
@@ -2171,9 +1987,15 @@ version = "1.9.2+0"
 # ╟─10499798-1ba6-4a2f-827b-aecc4a1f8346
 # ╠═ffde1960-8792-4092-9a0b-42b2726bb2da
 # ╟─10f54651-4b05-4806-9a0c-cb0b6afa245b
-# ╟─2291567f-71a4-4a53-a80c-aab58f29ddf8
+# ╟─9ca89928-17c9-456b-9c1e-a965678125a3
 # ╠═05e772d4-a2ad-4f16-866c-b8aa3ab7a550
 # ╟─eb1ff48b-7dbc-4b37-a18d-77eadc568f5a
+# ╟─2291567f-71a4-4a53-a80c-aab58f29ddf8
+# ╠═3e4f3191-f391-44a7-bbdf-11df2788055d
+# ╟─2ae44e62-f84e-4959-967b-5923404a094f
+# ╟─b11596d7-0fce-4e19-b590-43f5b0f94b67
+# ╠═95607881-c7ed-41b5-8348-f44445e52445
+# ╟─7e7edf97-bff9-4595-836e-6da11baa9169
 # ╟─07653065-2ef3-4a63-a25b-1b308c22aff5
 # ╠═a1122848-347f-408b-99c2-a7a514073864
 # ╠═62cf3b41-2a34-4ec9-b8bc-206419856a28
@@ -2187,6 +2009,7 @@ version = "1.9.2+0"
 # ╠═b974e7f2-e72d-4732-8b1c-b85e1ad99463
 # ╠═f32cfd9a-2e2c-4da3-9d05-ceaa3814a502
 # ╠═05a8d334-72a5-4747-8bbf-22f8cf394976
+# ╠═9c55facc-ae44-4361-9d9d-35e39328d1d9
 # ╠═dc5f32fd-1abd-4106-baef-010404c42a5b
 # ╟─ee6afb29-912a-46cc-b04c-def7b844681d
 # ╟─fe01ddad-4eac-4ed5-b081-860890297958
