@@ -7,13 +7,17 @@ using Test
 end;
 
 @testset "Testing that variables exist" begin
-   @test @isdefined(response_1a)
-   @test @isdefined(response_1b)
+   @test @isdefined(response_4a)
+   @test @isdefined(response_4b)
+   @test @isdefined(response_4c)
+   @test @isdefined(response_4d)
 end;
 
 @testset "Testing that variables are not missing" begin
-   @test !ismissing(response_1a)
-   @test !ismissing(response_1b)
+   @test !ismissing(response_4a)
+   @test !ismissing(response_4b)
+   @test !ismissing(response_4c)
+   @test !ismissing(response_4d)
 end;
 
 @testset "Testing that functions' structure" begin
