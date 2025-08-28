@@ -263,7 +263,7 @@ md"""Now, try try benchmarking the same code using the `@benchmark` macro.  (Thi
 aside(tip(md"`@benchmark` is a macro.  Macros take code as input and transform it into (usually longer and more complicated) code as output.  In order to make sure that Julia can optimze the code appropriately we *interpolate* the variables `A` and `x` using the `$` symbol."))
 
 # ╔═╡ ef6e093f-613a-47ed-bcb1-f593f41cf73a
-@benchmark solve_Ax_via_LU_factorization($A,$y) #seconds=5
+@benchmark solve_Ax_via_LU_factorization($A,$y) 
 
 # ╔═╡ f43b83a3-2560-4036-b6f4-20cc3860efb0
 md"""
