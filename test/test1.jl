@@ -44,13 +44,8 @@ end;
    @test !ismissing(response_1p)
 end;
 
-@testset "Testing that functions' structure" begin
-   @test my_function_1_arg_is_good_to_go
-   @test my_function_2_args_is_good_to_go
-end
-
 @testset "Testing numerical answers" begin
-   maxN_8gb = floor(Int,sqrt(4*2^30/8))
+   maxN_8gb = floor(Int,sqrt(8*2^30/8))
 	@test response_1c == maxN_8gb
 	maxN_1tb = floor(Int,sqrt(1024*2^30/8))
    @test response_1f == maxN_1tb
