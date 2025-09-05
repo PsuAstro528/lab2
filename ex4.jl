@@ -157,7 +157,7 @@ end
 # ╔═╡ 75fc22e9-8f8b-42a1-af77-d10f12255105
 begin
 	my_function_1_arg_inplace_is_good_to_go = false
-	if !@isdefined(my_function_1_arg_inplace_is_good_to_go!)
+	if !@isdefined(my_function_1_arg_inplace_is_good_to_go)
 		func_not_defined(:my_function_1_arg!)
 	elseif length(methods(my_function_1_arg!,[Array,Array,])) != 1
 		PlutoTeachingTools.warning_box(md"`my_function_1_arg!` should take two  `Array`'s as its arguements")
