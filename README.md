@@ -1,0 +1,35 @@
+# Astro 528 Lab 2
+
+Before starting this lab, make sure you've successfully gotten setup to use git, Julia and Pluto.
+The previous lab contained detailed instructions for using the Pluto notebook server.  
+
+Remember, that you need follow the provided link to create your own private copy of this lab's repository on GitHub.com.   See the
+[help on the course website](https://psuastro528.github.io/Fall2025/tips) for instructions on getting setup to use Lynx, cloning, commiting, pushing and submiting your work
+
+## Exercise 1:  Computational Costs of Linear Algebra
+- Goal 1: Predict cost of an algorithm based on Big-O notation
+- Goal 2: Identify real world complications that affect scaling
+
+From your Pluto notebook server, work through ex1.jl.
+
+## Exercise 2:  Assertions, Unit Tests & Continuous Integration Testing
+- Goal 1:  Implement effective assertions
+- Goal 2:  Implement effective unit tests
+- Goal 3:  Setup continuous integration testing
+
+From your Pluto notebook server, work through ex2.jl.
+
+## Exercise 3:  Numerical Stability of N-body Integration
+- Goal 1:  Integrate differential equations
+- Goal 2:  Compare the accuracy of results as a function of time step, order and algorithm
+- Goal 3:  Recognize importance of numerical stability
+
+From your Pluto notebook server, work through ex3.jl.
+
+## Exercise 4:  Benchmarking Arithmetic
+- Goal 1:  Benchmark numerical functions accurately
+- Goal 2:  Compare cost of common numerical functions 
+
+From your Pluto notebook server, work through ex4.jl.
+
+
