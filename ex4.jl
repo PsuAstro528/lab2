@@ -122,7 +122,7 @@ end
 md"Now try benchmarking some univariate functions of your own and comparing them to `sqrt`.  Write a function `my_function_1_arg` that takes an array and applies a function of your choice to the input array."
 
 # ╔═╡ 39ed7918-8926-4866-8b25-c61dbbd35991
-my_function_1_arg(x::Array) =  missing # TODO Replace code here
+my_function_1_arg(x::Array) =  sqrt.(x) # TODO Replace code here
 
 # ╔═╡ a403c0f3-fc4a-4bc1-87c4-8a2d5d15e1a0
 begin
@@ -149,7 +149,7 @@ Now write another version of your function, `my_function_1_arg!`, that now takes
 function my_function_1_arg!(out::AbstractVector, x::AbstractVector) 
 	@assert size(out) == size(x) 
 	for i in 1:length(x)
-		# TODO: Insert code to compute your function here
+		out[i] = sqrt(x[i]) # TODO: Insert code to compute your function here
 	end
 	return out
 end
@@ -157,7 +157,7 @@ end
 # ╔═╡ 75fc22e9-8f8b-42a1-af77-d10f12255105
 begin
 	my_function_1_arg_inplace_is_good_to_go = false
-	if !@isdefined(my_function_1_arg_inplace_is_good_to_go)
+	if !@isdefined(my_function_1_arg!)
 		func_not_defined(:my_function_1_arg!)
 	elseif length(methods(my_function_1_arg!,[Array,Array,])) != 1
 		PlutoTeachingTools.warning_box(md"`my_function_1_arg!` should take two  `Array`'s as its arguements")
@@ -263,7 +263,7 @@ Now let's compare the performance of in-place versions of those functions.
 md"Create a function `my_function_2_args` that takes two arrays and applies computes a function of your choice to them."
 
 # ╔═╡ f13619d1-6ece-42be-965d-ab6bb9e9b8cd
-my_function_2_args(x::AbstractVector, y::AbstractVector) = missing  # Replace missing with your function
+my_function_2_args(x::AbstractVector, y::AbstractVector) = atan.(y,x) # missing  # Replace missing with your function
 
 # ╔═╡ 340808ea-e99b-4de7-ad55-b2d812ff0f4d
 begin
@@ -284,7 +284,7 @@ end
 
 # ╔═╡ 4e36a5ed-ad2b-4f7c-9ad9-ecb4b3e312c5
 function my_function_2_args!(z::AbstractVector, x::AbstractVector, y::AbstractVector) 
-	missing  # Replace missing with your function body
+	z .= atan.(y,x) #missing  # Replace missing with your function body
 end
 
 # ╔═╡ 21580c47-2b8a-4215-826f-d25b053713ed
